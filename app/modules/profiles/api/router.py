@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, status
 from app.dependencies import get_analysis_service, get_repository
 from app.modules.analysis.api.schemas import MetricsOut
 from app.modules.analysis.application.services import AnalysisService
-from app.modules.profiles.api.mappers import to_domain
+from app.modules.profiles.api.mappers import from_domain, to_domain
 from app.modules.profiles.api.schemas import ProfileIn
 from app.modules.profiles.application.ports import ProfileRepository
 
@@ -18,6 +18,24 @@ async def create_profile(
 ) -> dict[str, str]:
     await repo.add(to_domain(body))
     return {"id": body.id}
+
+
+@router.get("/profiles/{profile_id}", response_model=ProfileIn)
+async def get_profile(
+    profile_id: str, repo: ProfileRepository = Depends(get_repository)
+) -> ProfileIn:
+    profile = await repo.get(profile_id)
+    return from_domain(profile)
+
+
+@router.put("/profiles/{profile_id}", status_code=status.HTTP_200_OK)
+async def update_profile(
+    profile_id: str,
+    body: ProfileIn,
+    repo: ProfileRepository = Depends(get_repository),
+) -> dict[str, str]:
+    await repo.update(to_domain(body))
+    return {"id": profile_id}
 
 
 @router.get("/profiles/{profile_id}/analysis", response_model=MetricsOut)

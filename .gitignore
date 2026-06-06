@@ -13,3 +13,4 @@ tests/
 *.xlsx
 summary_by_cif*.csv
 transactions_labeled.csv
+*.xls

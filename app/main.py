@@ -14,6 +14,7 @@ from app.core.errors import (
     Unauthorized,
 )
 from app.modules.advisory.api.router import router as advisory_router
+from app.modules.analysis.api.router import router as analysis_router
 from app.modules.auth.api.router import router as auth_router
 from app.modules.auth.api.security import require_auth
 from app.modules.forecasting.api.router import router as forecast_router
@@ -36,6 +37,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(profiles_router, dependencies=protected)
     app.include_router(advisory_router, dependencies=protected)
+    app.include_router(analysis_router, dependencies=protected)
     app.include_router(ingestion_router, dependencies=protected)
     app.include_router(forecast_router, dependencies=protected)
 

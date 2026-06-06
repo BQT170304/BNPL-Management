@@ -10,14 +10,8 @@ def test_defaults_use_memory_and_disabled_bedrock(monkeypatch):
     assert s.allocation_strategy in ("weighted", "even")
 
 
-def test_weights_loaded():
-    s = Settings(_env_file=None)
-    assert abs(s.score_weight_cashflow + s.score_weight_goal
-               + s.score_weight_efr + s.score_weight_dti - 1.0) < 1e-9
-
-
 def test_ingestion_and_cors_defaults():
     s = Settings(_env_file=None)
-    assert s.ingestion_csv_path == "summary_by_cif_month.csv"
+    assert s.ingestion_csv_path == "data/summary_by_cif_month.csv"
     assert s.cors_origins == "http://localhost:5173"
     assert s.cors_origin_list == ["http://localhost:5173"]

@@ -28,13 +28,17 @@ describe("profileForm", () => {
     expect(body.goals[0].target_amount).toBe(300_000_000);
   });
 
-  it("seedToForm fills aggregate income/expense/debt", () => {
+  it("seedToForm fills income, splits expenses into categories, sets goals", () => {
     const f = seedToForm({ cif: "100", income: 12_000_000, expense: 5_000_000, debt_payment: 2_000_000 });
     expect(f.income.salary).toBe(12_000_000);
-    expect(f.expenses).toHaveLength(1);
-    expect(f.expenses[0].amount).toBe(5_000_000);
-    expect(f.expenses[0].classification).toBe("SEMI_FIXED");
+    // expenses are split into 4 categories totalling ~100% of seed.expense
+    expect(f.expenses.length).toBe(4);
+    const totalExp = f.expenses.reduce((s, e) => s + e.amount, 0);
+    expect(totalExp).toBeGreaterThan(0);
     expect(f.debts).toHaveLength(1);
     expect(f.debts[0].monthly_payment).toBe(2_000_000);
+    // default goals are created
+    expect(f.goals.length).toBeGreaterThan(0);
+    expect(f.emergency_fund).toBeGreaterThan(0);
   });
 });

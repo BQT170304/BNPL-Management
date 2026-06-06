@@ -13,11 +13,11 @@ describe("ProfileBuilder", () => {
       new Response(JSON.stringify({ id: "p-1-x" }), { status: 201 }),
     );
     vi.stubGlobal("fetch", spy);
-    const onCreated = vi.fn();
+    const onSaved = vi.fn();
 
     render(
       <ActiveProfileProvider>
-        <ProfileBuilder initialSeed={null} onCreated={onCreated} />
+        <ProfileBuilder initialSeed={null} onSaved={onSaved} />
       </ActiveProfileProvider>,
     );
 
@@ -27,6 +27,6 @@ describe("ProfileBuilder", () => {
     const [url, init] = spy.mock.calls[0];
     expect(url).toBe("/api/profiles");
     expect((init as RequestInit).method).toBe("POST");
-    await waitFor(() => expect(onCreated).toHaveBeenCalled());
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
   });
 });
