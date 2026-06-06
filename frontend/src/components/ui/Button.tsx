@@ -6,10 +6,10 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" }) {
   const base =
-    "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50";
+    "inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50";
   const styles =
     variant === "primary"
-      ? "bg-indigo-600 text-white hover:bg-indigo-700"
-      : "bg-slate-100 text-slate-700 hover:bg-slate-200";
+      ? "bg-bnpl-navy text-white shadow-bnpl hover:bg-bnpl-navy-soft focus:outline-none focus:ring-2 focus:ring-bnpl-orange/40"
+      : "border border-bnpl-surface-line bg-white text-bnpl-navy hover:border-bnpl-orange/50 hover:text-bnpl-orange focus:outline-none focus:ring-2 focus:ring-bnpl-orange/30";
   return <button className={`${base} ${styles} ${className}`} {...props} />;
 }

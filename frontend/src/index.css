@@ -1,7 +1,32 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-slate-50 text-slate-800;
+@layer base {
+  :root {
+    color: #1b1b1d;
+    background: #fbf9fb;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply min-h-screen bg-bnpl-surface text-bnpl-ink antialiased;
+    background:
+      linear-gradient(135deg, rgba(10, 25, 47, 0.06), rgba(255, 140, 0, 0.04) 38%, transparent 64%),
+      #fbf9fb;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 }

@@ -17,7 +17,7 @@ export function NumberInput({
       value={value === 0 ? "" : formatVnd(value).replace(" ₫", "")}
       onChange={(e) => onValueChange(parseVnd(e.target.value))}
       placeholder="0"
-      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+      className="min-h-12 w-full rounded-lg border border-bnpl-surface-line bg-white px-3 py-2 font-mono text-sm text-bnpl-ink placeholder:text-bnpl-muted/50 focus:border-bnpl-navy focus:outline-none focus:ring-2 focus:ring-bnpl-orange/20"
     />
   );
 }
