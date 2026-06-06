@@ -53,6 +53,7 @@ class EvaluateOut(BaseModel):
 
 class SimulateIn(BaseModel):
     profile_id: str
+    cif: str | None = None             # CIF for Prophet forecast lookup
     purchase_amount: int = Field(gt=0)
     option_type: str = "INSTALLMENT"   # "PAY_IN_FULL" | "INSTALLMENT"
     term_months: int | None = None

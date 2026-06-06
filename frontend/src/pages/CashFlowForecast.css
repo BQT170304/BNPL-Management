@@ -1,0 +1,26 @@
+.forecast-page { display: flex; flex-direction: column; }
+
+.forecast-hero {
+  background: var(--gradient-primary);
+  padding: 20px;
+  color: white;
+}
+
+.forecast-hero h1 { font-size: var(--text-xl); font-weight: 700; }
+.forecast-hero p { font-size: var(--text-sm); opacity: 0.8; margin-top: 4px; }
+
+.forecast-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.summary-card {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: var(--shadow-card);
+}
+
+.summary-period { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.summary-value { font-size: var(--text-2xl); font-weight: 700; margin: 4px 0; }
+.summary-trend { font-size: var(--text-xs); }

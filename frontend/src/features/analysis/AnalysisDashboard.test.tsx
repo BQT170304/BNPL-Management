@@ -12,6 +12,8 @@ const METRICS: MetricsOut = {
   goals: [{ goal_id: "g1", name: "Car", gap: 300_000_000, monthly_allocated: 400_000,
             gat: 750, delay: 720, grs: 100, months_remaining: 30 }],
   flags: [],
+  overall_health_score: 50,
+  metric_statuses: {},
 };
 
 describe("AnalysisDashboard", () => {

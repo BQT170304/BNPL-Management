@@ -13,6 +13,7 @@ from typing import Any
 
 from app.modules.advisory.application.dto import OptionPacket
 from app.modules.advisory.application.services import EvaluationResult
+from app.modules.analysis.domain.results import ProfileMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,12 @@ class ExplanationResult:
     emergency_fund_assessment: str
     balanced_option_summary: str
     source: str   # "llm" | "template"
+
+
+@dataclass
+class HomeAdviceResult:
+    advice: str
+    scorer_used: str   # "llm" | "template"
 
 
 _SYSTEM = """\
@@ -137,6 +144,52 @@ class ExplainService:
             source="llm",
         )
 
+    # ── Home dashboard advice ─────────────────────────────────────────────────
+
+    def advise_home(self, metrics: ProfileMetrics) -> HomeAdviceResult:
+        """Generate a brief financial health summary for the home dashboard."""
+        if self._llm_enabled and self._url:
+            try:
+                return self._home_via_llm(metrics)
+            except Exception as exc:
+                logger.warning("LLM home advice failed, using template: %s", exc)
+        return HomeAdviceResult(advice=_home_template(metrics), scorer_used="template")
+
+    def _home_via_llm(self, metrics: ProfileMetrics) -> HomeAdviceResult:
+        facts = (
+            f"Điểm sức khoẻ tài chính: {metrics.overall_health_score}/100\n"
+            f"Dòng tiền ròng: {metrics.ncf:,.0f} đ/tháng\n"
+            f"Tỷ lệ nợ/thu nhập (DTI): {metrics.dti:.1f}%\n"
+            f"Tỷ lệ tiết kiệm: {metrics.saving_rate:.1f}%\n"
+            f"Quỹ khẩn cấp: {metrics.efr:.1f} tháng\n"
+            f"Số mục tiêu tài chính: {len(metrics.goals)}\n"
+            f"Cảnh báo hệ thống: {', '.join(metrics.flags) if metrics.flags else 'Không có'}\n"
+        )
+        prompt = (
+            facts + "\n"
+            "Hãy đưa ra nhận xét ngắn gọn (2-3 câu) về tình trạng tài chính và "
+            "1-2 hành động cụ thể để cải thiện. Viết bằng tiếng Việt, thân thiện, dễ hiểu. "
+            "Chỉ trả về đoạn văn, không JSON, không bullet point."
+        )
+        body = json.dumps({
+            "model": self._model,
+            "max_tokens": 300,
+            "temperature": 0.4,
+            "chat_template_kwargs": {"enable_thinking": False},
+            "messages": [
+                {"role": "system", "content": "Bạn là cố vấn tài chính cá nhân thân thiện, trả lời bằng tiếng Việt ngắn gọn."},
+                {"role": "user", "content": prompt},
+            ],
+        }, ensure_ascii=False).encode()
+        req = urllib.request.Request(
+            self._url, data=body, method="POST",
+            headers={"Content-Type": "application/json", "Authorization": self._auth},
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw: dict[str, Any] = json.loads(resp.read())
+        advice = str(raw["choices"][0]["message"]["content"]).strip()
+        return HomeAdviceResult(advice=advice, scorer_used="llm")
+
     def _explain_via_template(self, result: EvaluationResult) -> ExplanationResult:
         best_id = result.scoring.best_option_id
         best = next((p for p in result.packets if p.option.id == best_id), result.packets[0])
@@ -200,3 +253,25 @@ def _emergency_fund_assessment(best: OptionPacket) -> str:
     return (f"Cảnh báo: quỹ khẩn cấp chỉ còn {efr:.1f} tháng — rất mỏng. "
             "Nếu có sự cố bất ngờ (mất việc, bệnh viện), bạn sẽ không có đệm an toàn. "
             "Hãy cân nhắc kỹ trước khi quyết định.")
+
+
+def _home_template(metrics: ProfileMetrics) -> str:
+    parts: list[str] = []
+    score = metrics.overall_health_score
+    if score >= 70:
+        parts.append("Tài chính của bạn đang ở trạng thái tốt.")
+    elif score >= 50:
+        parts.append("Tài chính ổn định nhưng có một vài điểm cần chú ý.")
+    else:
+        parts.append("Tài chính đang ở mức cần cải thiện, có một số rủi ro cần xử lý.")
+
+    if metrics.ncf < 0:
+        parts.append("Dòng tiền tháng đang âm — cần cắt giảm chi tiêu hoặc tăng thu nhập.")
+    elif metrics.saving_rate < 10:
+        parts.append(f"Tỷ lệ tiết kiệm chỉ đạt {metrics.saving_rate:.0f}%, nên hướng đến ít nhất 20% thu nhập.")
+    if metrics.efr < 3:
+        parts.append(f"Quỹ khẩn cấp còn {metrics.efr:.1f} tháng — cần bổ sung để đạt 3–6 tháng chi tiêu.")
+    if metrics.dti > 40:
+        parts.append(f"Tỷ lệ nợ/thu nhập ở mức {metrics.dti:.0f}%, hạn chế vay thêm cho đến khi giảm xuống dưới 40%.")
+
+    return " ".join(parts) if parts else "Không có dữ liệu đủ để phân tích."

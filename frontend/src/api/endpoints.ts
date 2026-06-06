@@ -1,6 +1,6 @@
 import { apiBlob, apiFetch } from "./client";
 import type {
-  AlertsOut, CifSeed, EvaluateIn, EvaluateOut, ExplainIn,
+  AdviceOut, AlertsOut, CifSeed, EvaluateIn, EvaluateOut, ExplainIn,
   ExplanationOut, ForecastOut, MetricsOut, ProfileIn,
   ScenarioSimulationOut, SimulateIn,
 } from "./types";
@@ -88,6 +88,10 @@ export async function extractProfile(file: File): Promise<ExtractResponse> {
     throw new ApiError(res.status, detail);
   }
   return data as ExtractResponse;
+}
+
+export function getHomeAdvice(profileId: string): Promise<AdviceOut> {
+  return apiFetch(`/profiles/${profileId}/advice`);
 }
 
 export function getForecast(cif: string): Promise<ForecastOut> {

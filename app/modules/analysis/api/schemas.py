@@ -30,6 +30,11 @@ class GoalMetricOut(BaseModel):
     months_remaining: int
 
 
+class AdviceOut(BaseModel):
+    advice: str
+    scorer_used: str   # "llm" | "template"
+
+
 class MetricsOut(BaseModel):
     ncf: int
     dti: float
@@ -39,6 +44,8 @@ class MetricsOut(BaseModel):
     pgrs: float
     goals: list[GoalMetricOut]
     flags: list[str]
+    overall_health_score: int = 0
+    metric_statuses: dict[str, str] = {}
 
     @classmethod
     def from_domain(cls, m: ProfileMetrics) -> "MetricsOut":
@@ -47,4 +54,6 @@ class MetricsOut(BaseModel):
             saving_rate=m.saving_rate, efr=m.efr, pgrs=m.pgrs,
             goals=[GoalMetricOut(**g.__dict__) for g in m.goals],
             flags=m.flags,
+            overall_health_score=m.overall_health_score,
+            metric_statuses=m.metric_statuses,
         )

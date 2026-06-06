@@ -70,6 +70,8 @@ export interface MetricsOut {
   pgrs: number;
   goals: GoalMetricOut[];
   flags: string[];
+  overall_health_score: number;
+  metric_statuses: Record<string, 'healthy' | 'warning' | 'critical'>;
 }
 
 export interface AlertOut {
@@ -143,12 +145,18 @@ export interface ExplanationOut {
 
 export interface SimulateIn {
   profile_id: string;
+  cif?: string;
   purchase_amount: number;
   option_type: "PAY_IN_FULL" | "INSTALLMENT";
   term_months: number | null;
   apr: number;
   horizon_months: number;
   use_forecast: boolean;
+}
+
+export interface AdviceOut {
+  advice: string;
+  scorer_used: string;
 }
 export interface CashFlowMonthOut {
   month: number;

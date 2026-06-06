@@ -1,0 +1,99 @@
+/* ── Mobile ─────────────────────────────────────────── */
+.health-page { display: flex; flex-direction: column; min-height: 100vh; }
+
+.health-hero {
+  background: var(--gradient-hero);
+  padding: 20px 16px 28px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.health-hero h1 { font-size: var(--text-xl); font-weight: 700; }
+
+.hm-card {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hm-row { display: flex; align-items: center; justify-content: space-between; }
+.hm-label { font-size: var(--text-sm); font-weight: 600; color: var(--color-text-primary); }
+.hm-right { display: flex; align-items: center; gap: 8px; }
+.hm-value { font-size: var(--text-lg); font-weight: 700; }
+.hm-badge { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: var(--radius-full); }
+.hm-bar { height: 5px; background: var(--color-border); border-radius: 3px; }
+.hm-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+
+.hm-goals-card {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hm-goals-title {
+  font-size: 11px; font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+.goal-detail { display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border); }
+.goal-detail:last-child { border-bottom: none; padding-bottom: 0; }
+.goal-detail-header { display: flex; justify-content: space-between; align-items: baseline; }
+.goal-detail-name { font-size: var(--text-sm); font-weight: 600; }
+.goal-detail-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--color-text-muted); }
+
+/* ── Desktop (scoped to .health-page) ───────────────── */
+@media (min-width: 768px) {
+  .health-page .health-hero {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 40px 48px;
+    min-height: 160px;
+    gap: 32px;
+  }
+
+  .health-page .health-hero h1 { font-size: 2rem; font-weight: 800; }
+
+  .health-page .page-body {
+    padding: 32px 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .hm-card {
+    padding: 22px 24px;
+    border-radius: var(--radius-xl);
+    gap: 12px;
+  }
+  .hm-card:hover { box-shadow: var(--shadow-md); }
+
+  .hm-label { font-size: var(--text-base); }
+  .hm-value { font-size: var(--text-2xl); }
+  .hm-badge { font-size: 12px; padding: 3px 12px; }
+  .hm-bar { height: 7px; }
+
+  .hm-goals-card {
+    grid-column: 1 / -1;
+    padding: 24px 28px;
+    border-radius: var(--radius-xl);
+    gap: 16px;
+  }
+
+  .hm-goals-title { font-size: 12px; }
+  .goal-detail-name { font-size: var(--text-base); }
+  .goal-detail-meta { font-size: var(--text-sm); }
+}

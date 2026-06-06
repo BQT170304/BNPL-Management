@@ -95,8 +95,8 @@ async def simulate(
     if body.use_forecast:
         try:
             forecast_svc = deps.get_forecast_service()
-            result = forecast_svc.forecast(profile.id)
-            # aggregate Prophet daily forecast into monthly NCF
+            cif = body.cif or getattr(profile, "cif", None) or profile.id
+            result = forecast_svc.forecast(cif)
             monthly_forecast = _aggregate_monthly(result.forecast)
         except Exception:
             pass  # fall back to flat profile figures

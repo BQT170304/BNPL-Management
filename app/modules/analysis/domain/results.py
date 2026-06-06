@@ -28,3 +28,5 @@ class ProfileMetrics:
     pgrs: float
     goals: list[GoalMetric] = field(default_factory=list)
     flags: list[str] = field(default_factory=list)
+    overall_health_score: int = 0
+    metric_statuses: dict = field(default_factory=dict)
