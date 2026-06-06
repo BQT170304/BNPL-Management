@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { getAlerts, getAnalysis, getForecast } from "../../api/endpoints";
+import { ApiError } from "../../api/client";
+import { getAlerts, getAnalysis } from "../../api/endpoints";
 import { useAsync } from "../../hooks/useAsync";
 import { formatVnd } from "../../lib/money";
 
@@ -16,31 +17,31 @@ const DTI_COLOR: Record<string, string> = {
   DANGER: "text-red-300",
 };
 
-const EFR_COLOR = (efr: number) => efr >= 3 ? "text-emerald-300" : efr >= 1 ? "text-amber-300" : "text-red-300";
-
-const FORECAST_CIF = "10000327";
+const EFR_COLOR = (efr: number) =>
+  efr >= 3 ? "text-emerald-300" : efr >= 1 ? "text-amber-300" : "text-red-300";
 
 export function HealthSidebar({
   profileId,
   onEditProfile,
+  onProfileNotFound,
 }: {
   profileId: string;
   onEditProfile?: () => void;
+  onProfileNotFound?: () => void;
 }) {
-  const metricsAsync  = useAsync(getAnalysis);
-  const alertsAsync   = useAsync(getAlerts);
-  const forecastAsync = useAsync(getForecast);
+  const metricsAsync = useAsync(getAnalysis);
+  const alertsAsync  = useAsync(getAlerts);
 
   useEffect(() => {
-    metricsAsync.run(profileId).catch(() => undefined);
+    metricsAsync.run(profileId).catch((e) => {
+      if (e instanceof ApiError && e.status === 404) onProfileNotFound?.();
+    });
     alertsAsync.run(profileId).catch(() => undefined);
-    forecastAsync.run(FORECAST_CIF).catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId]);
 
   const m      = metricsAsync.data;
   const alerts = alertsAsync.data?.alerts ?? [];
-  const fc     = forecastAsync.data;
 
   return (
     <div className="flex flex-col gap-3">
@@ -63,7 +64,7 @@ export function HealthSidebar({
         {m ? (
           <>
             <div className="mt-3">
-              <p className="text-xs opacity-70">Dòng tiền ròng / tháng</p>
+              <p className="text-xs opacity-70">Tiền còn lại / tháng</p>
               <p className={`text-2xl font-bold leading-tight ${m.ncf < 0 ? "text-red-300" : ""}`}>
                 {formatVnd(m.ncf)}
               </p>
@@ -75,23 +76,28 @@ export function HealthSidebar({
                 <p className="font-bold text-base">{m.saving_rate.toFixed(0)}%</p>
               </div>
               <div className="text-right">
-                <p className="opacity-60">DTI</p>
+                <p className="opacity-60">Tỷ lệ nợ</p>
                 <p className={`font-bold text-base ${DTI_COLOR[m.dti_band] ?? ""}`}>
                   {m.dti.toFixed(0)}%
                 </p>
               </div>
               <div className="text-right">
-                <p className="opacity-60">EFR</p>
+                <p className="opacity-60">Dự phòng</p>
                 <p className={`font-bold text-base ${EFR_COLOR(m.efr)}`}>
                   {m.efr.toFixed(1)} th
                 </p>
               </div>
               <div className="text-right">
-                <p className="opacity-60">PGRS</p>
+                <p className="opacity-60">Rủi ro</p>
                 <p className="font-bold text-base">{m.pgrs.toFixed(0)}</p>
               </div>
             </div>
           </>
+        ) : metricsAsync.error ? (
+          <div className="mt-3">
+            <p className="text-sm text-red-200">Không tải được dữ liệu</p>
+            <p className="mt-1 text-xs text-white/60">{metricsAsync.error}</p>
+          </div>
         ) : (
           <div className="mt-3 space-y-2">
             <div className="h-7 animate-pulse rounded-lg bg-white/15" />
@@ -146,33 +152,6 @@ export function HealthSidebar({
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Prophet forecast */}
-      {fc && (
-        <div className="rounded-xl border border-slate-200 bg-white p-3">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-            Dự báo Prophet
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg bg-slate-50 p-2 text-center">
-              <p className="text-[11px] text-slate-400">30 ngày</p>
-              <p
-                className={`text-sm font-semibold ${fc.next_30_net < 0 ? "text-red-600" : "text-emerald-600"}`}
-              >
-                {formatVnd(Math.round(fc.next_30_net))}
-              </p>
-            </div>
-            <div className="rounded-lg bg-slate-50 p-2 text-center">
-              <p className="text-[11px] text-slate-400">90 ngày</p>
-              <p
-                className={`text-sm font-semibold ${fc.next_90_net < 0 ? "text-red-600" : "text-emerald-600"}`}
-              >
-                {formatVnd(Math.round(fc.next_90_net))}
-              </p>
-            </div>
           </div>
         </div>
       )}

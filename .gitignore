@@ -14,3 +14,5 @@ tests/
 summary_by_cif*.csv
 transactions_labeled.csv
 *.xls
+*.db
+.DS_Store

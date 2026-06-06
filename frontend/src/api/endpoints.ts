@@ -52,6 +52,44 @@ export function login(username: string, password: string): Promise<{ token: stri
   });
 }
 
+export function getDemoProfileId(): Promise<{ id: string }> {
+  return apiFetch<{ id: string }>("/demo-profile-id");
+}
+
+export interface ExtractionSummary {
+  months_analyzed: number;
+  avg_monthly_income: number;
+  avg_monthly_expense: number;
+  avg_monthly_net: number;
+  cif: string;
+}
+
+export interface ExtractResponse {
+  suggested_profile: import("./types").ProfileIn;
+  summary: ExtractionSummary;
+}
+
+export async function extractProfile(file: File): Promise<ExtractResponse> {
+  const form = new FormData();
+  form.append("file", file);
+  const token = (await import("./client")).getToken();
+  const res = await fetch("/api/profiles/extract", {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!res.ok) {
+    const detail = data && typeof data === "object" && "detail" in data
+      ? String((data as { detail: unknown }).detail)
+      : `Lỗi máy chủ (${res.status})`;
+    const { ApiError } = await import("./client");
+    throw new ApiError(res.status, detail);
+  }
+  return data as ExtractResponse;
+}
+
 export function getForecast(cif: string): Promise<ForecastOut> {
   return apiFetch<ForecastOut>(`/forecast/${cif}`);
 }

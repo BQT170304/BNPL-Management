@@ -186,7 +186,7 @@ function ComparisonTable({
           </MetricRow>
 
           {/* NCF remaining */}
-          <MetricRow label="NCF còn lại">
+          <MetricRow label="Tiền còn lại / tháng">
             {opts.map((o) => (
               <Cell key={o.option_id} className={`font-medium ${o.ncf_new < 0 ? "text-red-600" : "text-slate-700"}`}>
                 {formatVnd(o.ncf_new)}
@@ -195,7 +195,7 @@ function ComparisonTable({
           </MetricRow>
 
           {/* DTI */}
-          <MetricRow label="DTI mới">
+          <MetricRow label="Tỷ lệ nợ mới">
             {opts.map((o) => (
               <Cell key={o.option_id} className={o.dti_new > 50 ? "font-medium text-red-600" : o.dti_new > 40 ? "text-amber-700" : "text-slate-700"}>
                 {o.dti_new.toFixed(1)}%
@@ -340,15 +340,11 @@ export function PurchaseEvaluator({ profileId }: { profileId: string }) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-indigo-400">
-                  Tư vấn
+                  Nhận xét
                 </p>
                 <p className="mt-1 text-sm text-slate-700 leading-relaxed">
                   {data.balance_recommendation}
                 </p>
-              </div>
-              <div className="flex-shrink-0 text-right">
-                <p className="text-[11px] text-slate-400">Phân tích bởi</p>
-                <p className="text-xs font-medium text-slate-500">{data.scorer_used}</p>
               </div>
             </div>
             <div className="mt-3 flex gap-2">
@@ -421,7 +417,7 @@ export function PurchaseEvaluator({ profileId }: { profileId: string }) {
                     </p>
                   </div>
                   <div className="rounded-lg bg-slate-50 p-2.5">
-                    <p className="text-slate-400">Tháng NCF âm</p>
+                    <p className="text-slate-400">Tháng tiền âm</p>
                     <p className={`mt-0.5 text-sm font-semibold ${simAsync.data.months.filter((m) => m.net_cashflow < 0).length > 0 ? "text-red-600" : "text-emerald-600"}`}>
                       {simAsync.data.months.filter((m) => m.net_cashflow < 0).length} / 24
                     </p>

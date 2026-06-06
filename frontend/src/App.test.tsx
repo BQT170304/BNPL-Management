@@ -14,14 +14,14 @@ describe("App", () => {
   it("renders the setup wizard when authenticated but no profile", () => {
     localStorage.setItem("bnpl.token", "demo-token-bnpl");
     render(<App />);
-    expect(screen.getByText(/dữ liệu ngân hàng/i)).toBeInTheDocument();
-    expect(screen.getByText(/hồ sơ tài chính/i)).toBeInTheDocument();
+    expect(screen.getByText(/nhập file giao dịch/i)).toBeInTheDocument();
+    expect(screen.getByText(/xem lại hồ sơ/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /đăng xuất/i })).toBeInTheDocument();
   });
 
-  it("shows the CIF import step by default in setup wizard", () => {
+  it("shows the transaction import step by default in setup wizard", () => {
     localStorage.setItem("bnpl.token", "demo-token-bnpl");
     render(<App />);
-    expect(screen.getByText(/dùng dữ liệu này/i)).toBeInTheDocument();
+    expect(screen.getByText(/tải lên file giao dịch/i)).toBeInTheDocument();
   });
 });

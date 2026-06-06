@@ -82,6 +82,7 @@ export interface AlertOut {
 export interface AlertsOut {
   profile_id: string;
   alerts: AlertOut[];
+  has_critical: boolean;
 }
 
 export interface GoalImpactOut {

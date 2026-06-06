@@ -5,6 +5,7 @@ const KEY = "bnpl.activeProfileId";
 interface Ctx {
   activeProfileId: string | null;
   setActiveProfileId: (id: string) => void;
+  resetProfile: () => void;
 }
 
 const ActiveProfileContext = createContext<Ctx | null>(null);
@@ -17,8 +18,12 @@ export function ActiveProfileProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(KEY, id);
     setId(id);
   }, []);
+  const resetProfile = useCallback(() => {
+    localStorage.removeItem(KEY);
+    setId(null);
+  }, []);
   return (
-    <ActiveProfileContext.Provider value={{ activeProfileId, setActiveProfileId }}>
+    <ActiveProfileContext.Provider value={{ activeProfileId, setActiveProfileId, resetProfile }}>
       {children}
     </ActiveProfileContext.Provider>
   );

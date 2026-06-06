@@ -9,7 +9,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    persistence: Literal["memory", "postgres"] = "memory"
+    persistence: Literal["memory", "sqlite", "postgres"] = "sqlite"
+    sqlite_path: str = "bnpl.db"
     database_url: str = "postgresql+asyncpg://bnpl:bnpl@localhost:5432/bnpl"
     database_url_test: str = "postgresql+asyncpg://bnpl:bnpl@localhost:5432/bnpl_test"
 

@@ -33,15 +33,24 @@ from app.modules.profiles.infrastructure.sqlalchemy_repository import (
 )
 
 _settings = get_settings()
+_db_engine = None
+
 if _settings.persistence == "postgres":
-    _sessionmaker = build_sessionmaker(build_engine(_settings.database_url))
-    _repo: ProfileRepository = SqlAlchemyProfileRepository(_sessionmaker)
+    _db_engine = build_engine(_settings.database_url)
+    _repo: ProfileRepository = SqlAlchemyProfileRepository(build_sessionmaker(_db_engine))
+elif _settings.persistence == "sqlite":
+    _db_engine = build_engine(f"sqlite+aiosqlite:///{_settings.sqlite_path}")
+    _repo: ProfileRepository = SqlAlchemyProfileRepository(build_sessionmaker(_db_engine))
 else:
     _repo = InMemoryProfileRepository()
 
 
 def get_repository() -> ProfileRepository:
     return _repo
+
+
+def get_db_engine():
+    return _db_engine
 
 
 def get_scorer() -> RiskScorer:
