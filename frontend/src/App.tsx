@@ -4,28 +4,43 @@ import type { CifSeed } from "./api/types";
 import { Button } from "./components/ui/Button";
 import { AnalysisDashboard } from "./features/analysis/AnalysisDashboard";
 import { PurchaseEvaluator } from "./features/advisory/PurchaseEvaluator";
+import { LoginScreen } from "./features/auth/LoginScreen";
+import { CashflowForecast } from "./features/forecast/CashflowForecast";
 import { CifImport } from "./features/ingestion/CifImport";
 import { ProfileBuilder } from "./features/profile/ProfileBuilder";
 import { ActiveProfileProvider, useActiveProfile } from "./state/activeProfile";
+import { AuthProvider, useAuth } from "./state/auth";
 
-type Section = "import" | "profile" | "analysis" | "evaluate";
+type Section = "import" | "profile" | "analysis" | "evaluate" | "forecast";
+
+const USERNAME = "nguyenvana";
 
 const TABS: { key: Section; label: string }[] = [
   { key: "import", label: "1. Nhập CIF" },
   { key: "profile", label: "2. Hồ sơ" },
   { key: "analysis", label: "3. Phân tích" },
   { key: "evaluate", label: "4. Đánh giá" },
+  { key: "forecast", label: "5. Dự báo" },
 ];
 
 function Shell() {
   const [section, setSection] = useState<Section>("import");
   const [seed, setSeed] = useState<CifSeed | null>(null);
   const { activeProfileId } = useActiveProfile();
+  const { logout } = useAuth();
 
   return (
     <div className="mx-auto max-w-4xl p-6">
-      <h1 className="mb-1 text-2xl font-bold text-slate-800">BNPL Assistant</h1>
-      <p className="mb-5 text-sm text-slate-500">Tư vấn tài chính cá nhân</p>
+      <div className="mb-5 flex items-start justify-between">
+        <div>
+          <h1 className="mb-1 text-2xl font-bold text-slate-800">BNPL Assistant</h1>
+          <p className="text-sm text-slate-500">Tư vấn tài chính cá nhân</p>
+        </div>
+        <div className="flex items-center gap-3 text-sm text-slate-600">
+          <span>{USERNAME}</span>
+          <Button variant="ghost" onClick={logout}>Đăng xuất</Button>
+        </div>
+      </div>
 
       <nav className="mb-6 flex flex-wrap gap-2">
         {TABS.map((t) => (
@@ -53,7 +68,18 @@ function Shell() {
           ? <PurchaseEvaluator profileId={activeProfileId} />
           : <NoProfile />
       )}
+      {section === "forecast" && <CashflowForecast />}
     </div>
+  );
+}
+
+function Gate() {
+  const { token } = useAuth();
+  if (!token) return <LoginScreen />;
+  return (
+    <ActiveProfileProvider>
+      <Shell />
+    </ActiveProfileProvider>
   );
 }
 
@@ -67,8 +93,8 @@ function NoProfile() {
 
 export function App() {
   return (
-    <ActiveProfileProvider>
-      <Shell />
-    </ActiveProfileProvider>
+    <AuthProvider>
+      <Gate />
+    </AuthProvider>
   );
 }

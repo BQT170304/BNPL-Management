@@ -1,8 +1,11 @@
 // frontend/src/api/client.test.ts
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch } from "./client";
+import { ApiError, apiFetch, setToken } from "./client";
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  setToken(null);
+});
 
 function mockFetch(status: number, body: unknown) {
   vi.stubGlobal(
@@ -45,5 +48,30 @@ describe("apiFetch", () => {
     const err = new ApiError(400, "bad");
     expect(err).toBeInstanceOf(Error);
     expect(err.message).toContain("bad");
+  });
+
+  it("attaches Authorization header when a token is set", async () => {
+    const spy = vi.fn(async () => new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", spy);
+    setToken("demo-token-bnpl");
+    await apiFetch("/profiles");
+    expect(spy).toHaveBeenCalledWith(
+      "/api/profiles",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer demo-token-bnpl" }),
+      }),
+    );
+  });
+
+  it("omits Authorization header when no token", async () => {
+    const spy = vi.fn(
+      async (_url: string, _init?: RequestInit) => new Response("{}", { status: 200 }),
+    );
+    vi.stubGlobal("fetch", spy);
+    setToken(null);
+    await apiFetch("/profiles");
+    const init = spy.mock.calls[0]?.[1];
+    const headers = init?.headers as Record<string, string> | undefined;
+    expect(headers).not.toHaveProperty("Authorization");
   });
 });

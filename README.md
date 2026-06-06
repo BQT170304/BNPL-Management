@@ -8,9 +8,19 @@ a deterministic fallback.
 
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
+pip install -e ".[dev]"                              # or: pip install -r requirements-dev.txt
 cp .env.example .env
 ```
+
+Dependencies are declared in `pyproject.toml`; equivalent pinned-floor
+`requirements*.txt` files are provided for environments that don't install the
+project as a package:
+
+- `requirements.txt` — runtime deps
+- `requirements-dev.txt` — runtime + test/lint tooling
+- `requirements-forecast.txt` — adds optional Prophet (heavy Stan toolchain)
+
+The cash-flow forecast works without Prophet via a built-in naive forecaster.
 
 ## Run
 
@@ -35,9 +45,15 @@ ruff check . && mypy app && pytest -q
 
 ## Key endpoints
 
+- `POST /auth/login` — exchange demo credentials for a bearer token (unprotected)
 - `POST /profiles` — create a financial profile
 - `GET /profiles/{id}/analysis` — NCF, DTI, saving rate, EFR, per-goal GRS, PGRS
 - `POST /advisory/evaluate` — rank payment options for a purchase + explanation
+- `GET /forecast/{cif}` — daily-net cash-flow history + Prophet forecast, next-30/90 net
+- `GET /forecast/{cif}/chart.png` — rendered forecast chart (PNG)
+
+All endpoints except `/auth/login` and `/health` require an
+`Authorization: Bearer <token>` header when `AUTH_ENABLED=true`.
 
 ## Config (.env)
 
@@ -46,6 +62,12 @@ ruff check . && mypy app && pytest -q
 | `PERSISTENCE` | `memory` | `memory` or `postgres` |
 | `BEDROCK_ENABLED` | `false` | use Bedrock scorer; else deterministic |
 | `ALLOCATION_STRATEGY` | `weighted` | `weighted` or `even` NCF split |
+| `AUTH_ENABLED` | `true` | require a bearer token on protected endpoints |
+| `AUTH_USERNAME` / `AUTH_PASSWORD` | `nguyenvana` / `123456` | demo login credentials |
+| `AUTH_TOKEN` | `demo-token-bnpl` | bearer token returned by `/auth/login` |
+| `TRANSACTIONS_CSV_PATH` | `transactions_labeled.csv` | source for cash-flow forecasting |
+| `FORECAST_HORIZON_DAYS` | `90` | days to forecast ahead |
+| `PROPHET_ENABLED` | `true` | use Prophet if installed; else naive forecaster |
 
 ## Frontend
 

@@ -32,6 +32,16 @@ class Settings(BaseSettings):
     score_weight_efr: float = 0.20
     score_weight_dti: float = 0.10
 
+    auth_enabled: bool = True
+    auth_username: str = "nguyenvana"
+    auth_password: str = "123456"
+    auth_token: str = "demo-token-bnpl"        # bearer returned on login
+    transactions_csv_path: str = "transactions_labeled.csv"
+    forecast_horizon_days: int = 90
+    forecast_min_active_days: int = 20
+    prophet_enabled: bool = True
+    demo_cif: str = "10000327"
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -107,3 +107,14 @@ export interface CifSeed {
   expense: number;
   debt_payment: number;
 }
+
+export interface TokenOut { token: string; }
+export interface HistoryPointOut { ds: string; y: number; }
+export interface ForecastPointOut { ds: string; yhat: number; lower: number; upper: number; }
+export interface ForecastOut {
+  cif: string;
+  next_30_net: number;
+  next_90_net: number;
+  history: HistoryPointOut[];
+  forecast: ForecastPointOut[];
+}

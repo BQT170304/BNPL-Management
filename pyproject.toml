@@ -13,9 +13,11 @@ dependencies = [
     "asyncpg>=0.29",
     "alembic>=1.13",
     "pandas>=2.2",
+    "matplotlib>=3.8",
 ]
 
 [project.optional-dependencies]
+forecast = ["prophet>=1.1"]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
@@ -50,5 +52,5 @@ plugins = []
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ["boto3.*", "botocore.*", "pandas.*"]
+module = ["boto3.*", "botocore.*", "pandas.*", "matplotlib.*", "prophet.*"]
 ignore_missing_imports = true

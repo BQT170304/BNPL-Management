@@ -21,7 +21,10 @@ async def client(monkeypatch):
     monkeypatch.setattr(deps, "get_ingestion_service", lambda: svc)
     app = create_app()
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
+    async with AsyncClient(
+        transport=transport, base_url="http://test",
+        headers={"Authorization": "Bearer demo-token-bnpl"},
+    ) as c:
         yield c
 
 

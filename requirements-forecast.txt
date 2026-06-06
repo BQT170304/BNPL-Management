@@ -1,0 +1,5 @@
+# Optional Prophet forecasting backend (mirror of
+# [project.optional-dependencies].forecast). Requires a Stan toolchain to build.
+# Install with: pip install -r requirements-forecast.txt
+-r requirements.txt
+prophet>=1.1

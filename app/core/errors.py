@@ -25,3 +25,13 @@ class CifNotFound(DomainError):
 
 class InvalidInput(DomainError):
     pass
+
+
+class InvalidCredentials(DomainError):
+    def __init__(self, message: str = "Invalid username or password") -> None:
+        super().__init__(message)
+
+
+class Unauthorized(DomainError):
+    def __init__(self, message: str = "Unauthorized") -> None:
+        super().__init__(message)
