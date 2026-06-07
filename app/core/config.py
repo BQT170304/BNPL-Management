@@ -19,8 +19,11 @@ class Settings(BaseSettings):
 
     allocation_strategy: Literal["weighted", "even"] = "weighted"
     efr_safe_months: int = 3
+    low_confidence_threshold: float = 0.7
+    forecast_engine: Literal["deterministic", "prophet"] = "deterministic"
 
     ingestion_csv_path: str = "summary_by_cif_month.csv"
+    transaction_csv_path: str = "transactions_labeled.csv"
     cors_origins: str = "http://localhost:5173"
 
     @property

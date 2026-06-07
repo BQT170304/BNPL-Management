@@ -19,5 +19,6 @@ def test_weights_loaded():
 def test_ingestion_and_cors_defaults():
     s = Settings(_env_file=None)
     assert s.ingestion_csv_path == "summary_by_cif_month.csv"
+    assert s.transaction_csv_path == "transactions_labeled.csv"
     assert s.cors_origins == "http://localhost:5173"
     assert s.cors_origin_list == ["http://localhost:5173"]

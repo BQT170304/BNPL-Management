@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "bnpl-assistant"
 version = "0.1.0"
@@ -23,6 +27,17 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
 ]
+# Prophet-based cashflow forecasting (heavy; enable with FORECAST_ENGINE=prophet).
+# Install with: pip install -e ".[forecast]"
+forecast = [
+    "prophet>=1.1",
+]
+
+# The repo uses a flat layout with several top-level dirs (app, data,
+# alembic, frontend). Only `app` is the importable Python package, so scope
+# setuptools discovery to it instead of letting auto-discovery fail.
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -50,5 +65,5 @@ plugins = []
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ["boto3.*", "botocore.*", "pandas.*"]
+module = ["boto3.*", "botocore.*", "pandas.*", "prophet.*", "cmdstanpy.*"]
 ignore_missing_imports = true

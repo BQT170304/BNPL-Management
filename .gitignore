@@ -8,7 +8,20 @@ __pycache__/
 .ruff_cache/
 .codegraph/
 
+# Local notes and generated documentation are not pushed for this handoff
+*.md
+
 # Large input-data artifacts (kept out of version control)
 *.xlsx
 summary_by_cif*.csv
 transactions_labeled.csv
+data/
+
+# Local scratch scripts
+test.py
+
+# Frontend local/generated artifacts and legacy copy
+frontend/node_modules/
+frontend/.vite/
+frontend/dist/
+frontend_legacy/
