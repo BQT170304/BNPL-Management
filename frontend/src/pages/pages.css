@@ -14,13 +14,13 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .page-header {
-  background: var(--gradient-hero);
-  padding: 16px 20px;
+  background: var(--gradient-primary);
+  padding: 12px 16px;
   color: white;
   display: flex; align-items: center; gap: 12px;
   flex-shrink: 0;
 }
-.page-header h1 { font-size: var(--text-lg); font-weight: 600; }
+.page-header h1 { font-size: var(--text-base); font-weight: 600; }
 
 .back-btn {
   background: none; border: none; color: white;
@@ -68,12 +68,11 @@
 /* ── Sub-pages desktop: advisor / results / detail ─── */
 @media (min-width: 768px) {
   .page-header {
-    padding: 40px 48px;
-    min-height: 120px;
-    align-items: flex-end;
-    padding-bottom: 24px;
+    padding: 22px 48px 18px;
+    min-height: auto;
+    align-items: center;
   }
-  .page-header h1 { font-size: 1.75rem; font-weight: 800; }
+  .page-header h1 { font-size: var(--text-xl); font-weight: 700; }
 
   /* These page-body rules only take effect on pages that don't
      override .page-body in their own scoped CSS */

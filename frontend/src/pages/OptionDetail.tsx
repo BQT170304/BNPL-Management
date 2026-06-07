@@ -8,6 +8,14 @@ const fmt = (n: number) => n >= 1_000_000
   ? `${(n / 1_000_000).toFixed(2)}M ₫`
   : `${n.toLocaleString('vi-VN')} ₫`;
 
+const FLAG_VI: Record<string, string> = {
+  NEGATIVE_CASHFLOW:        "Dòng tiền âm",
+  REQUIRES_EMERGENCY_FUND:  "Cần bổ sung quỹ dự phòng",
+  NEGATIVE_NCF:             "Dòng tiền tháng âm",
+  LOW_CASHFLOW:             "Dòng tiền thấp",
+  HIGH_DTI:                 "Tỷ lệ nợ cao",
+};
+
 const OPTION_NAMES: Record<string, string> = {
   'pay_in_full': 'Trả thẳng',
   'installment_6': 'Trả góp 6 tháng',
@@ -79,7 +87,11 @@ export function OptionDetail() {
 
             {opt.flags.length > 0 && (
               <div className="flags-card">
-                {opt.flags.map(f => <div key={f} className="flag-item">{f}</div>)}
+                {opt.flags.map(f => (
+                  <div key={f} className="flag-item">
+                    {FLAG_VI[f] ?? f.toLowerCase().replace(/_/g, " ")}
+                  </div>
+                ))}
               </div>
             )}
           </div>

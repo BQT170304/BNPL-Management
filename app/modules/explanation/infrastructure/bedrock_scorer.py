@@ -20,8 +20,10 @@ logger = logging.getLogger(__name__)
 _SYSTEM = (
     "Bạn là cố vấn tài chính cá nhân. Dựa trên các chỉ số ĐÃ TÍNH SẴN cho mỗi phương án "
     "thanh toán BNPL, hãy: (1) chấm điểm RỦI RO mỗi phương án 0–100 (0=an toàn nhất), "
-    "(2) chọn phương án tốt nhất, (3) viết giải thích 2-3 câu tiếng Việt tự nhiên cho mỗi phương án "
-    "— nêu rõ tác động dòng tiền, lãi, mục tiêu bị ảnh hưởng. "
+    "(2) chọn phương án tốt nhất, (3) viết giải thích 2-3 câu tiếng Việt thông thường, dễ hiểu với người bình thường. "
+    "KHÔNG dùng thuật ngữ tài chính chuyên môn hay chữ viết tắt (không dùng DTI, NCF, EFR, delta_pgrs, v.v.). "
+    "Thay vào đó dùng: 'tiền còn lại mỗi tháng' thay cho NCF, 'tỷ lệ nợ so với thu nhập' thay cho DTI, "
+    "'quỹ dự phòng' thay cho EFR. Nêu cụ thể con số bằng tiền (ví dụ: còn lại 2 triệu/tháng, lãi phát sinh 1.5 triệu). "
     "CHỈ trả về JSON đúng schema, không thêm gì khác."
 )
 
@@ -75,7 +77,7 @@ def _build_prompt(packet: ScoringPacket) -> str:
                     "option_id": "str",
                     "risk_score": "0-100 (0=safest)",
                     "recommended": "bool",
-                    "explanation": "2-3 câu tiếng Việt: nêu dòng tiền, lãi, ảnh hưởng mục tiêu",
+                    "explanation": "2-3 câu tiếng Việt đơn giản: nêu tiền trả mỗi tháng, lãi phát sinh, tiền còn lại — không dùng DTI/NCF/EFR",
                     "key_factors": ["str"],
                 }
             ],

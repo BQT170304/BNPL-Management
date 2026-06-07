@@ -41,9 +41,10 @@ class BNPLSimulator:
 
             if monthly_forecast and i < len(monthly_forecast):
                 _, forecasted_ncf = monthly_forecast[i]
-                # back-calculate expense from forecasted net: income − expense − debt = ncf
-                income_f = base_income
-                expense_f = max(0.0, income_f - base_debt - forecasted_ncf)
+                # Derive income so that ncf = forecast - bnpl_pay.
+                # Keeping expense realistic: income = forecast + expense + debt
+                expense_f = base_expense
+                income_f = max(0.0, forecasted_ncf + base_expense + base_debt)
             else:
                 income_f = base_income
                 expense_f = base_expense

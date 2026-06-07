@@ -79,7 +79,7 @@ def get_db_engine():
 
 def get_scorer() -> RiskScorer:
     """Scorer priority (outermost wins, each wraps the next as fallback):
-    PD model → LocalLLM → Bedrock → HardRules
+    LocalLLM → PD model → Bedrock → HardRules
     """
     s = get_settings()
     base: RiskScorer = HardRuleScorer()
@@ -88,16 +88,16 @@ def get_scorer() -> RiskScorer:
         client = boto3.client("bedrock-runtime", region_name=s.aws_region)
         base = BedrockScorer(client=client, model_id=s.bedrock_model_id, fallback=base)
 
+    if s.ml_enabled:
+        pd = PDScorer(model_path=s.ml_model_path)
+        if pd.is_available():
+            base = PDBackedScorer(pd_scorer=pd, fallback=base)
+
     if s.local_llm_enabled:
         base = LocalLLMScorer(
             url=s.local_llm_url, auth=s.local_llm_auth,
             model=s.local_llm_model, fallback=base,
         )
-
-    if s.ml_enabled:
-        pd = PDScorer(model_path=s.ml_model_path)
-        if pd.is_available():
-            base = PDBackedScorer(pd_scorer=pd, fallback=base)
 
     return base
 
