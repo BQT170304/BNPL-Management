@@ -1,6 +1,6 @@
 import { type ReactNode, useState } from "react";
 import { evaluatePurchase, explainPurchase, simulatePurchase } from "../../api/endpoints";
-import type { EfrSafety, EvaluateOut, GoalImpactOut, ScenarioSimulationOut } from "../../api/types";
+import type { CashFlowMonthOut, EfrSafety, EvaluateOut, GoalImpactOut, ScenarioSimulationOut } from "../../api/types";
 import { Button } from "../../components/ui/Button";
 import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { Field } from "../../components/ui/Field";
@@ -13,6 +13,18 @@ import { CashflowChart } from "./CashflowChart";
 import { ExplanationPanel } from "./ExplanationPanel";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
+
+const FLAG_VI: Record<string, string> = {
+  NEGATIVE_CASHFLOW:        "Dòng tiền âm",
+  REQUIRES_EMERGENCY_FUND:  "Cần bổ sung quỹ dự phòng",
+  NEGATIVE_NCF:             "Dòng tiền tháng âm",
+  LOW_CASHFLOW:             "Dòng tiền thấp",
+  HIGH_DTI:                 "Tỷ lệ nợ cao",
+};
+
+function translateFlag(f: string) {
+  return FLAG_VI[f] ?? f.toLowerCase().replace(/_/g, " ");
+}
 
 function optionLabel(id: string): string {
   if (/full/.test(id)) return "Trả thẳng";
@@ -240,7 +252,7 @@ function ComparisonTable({
           <MetricRow label="Cảnh báo">
             {opts.map((o) => (
               <Cell key={o.option_id} className="text-xs text-red-500">
-                {o.flags.length > 0 ? o.flags.join(", ") : <span className="text-slate-300">–</span>}
+                {o.flags.length > 0 ? o.flags.map(translateFlag).join(", ") : <span className="text-slate-300">–</span>}
               </Cell>
             ))}
           </MetricRow>
@@ -383,7 +395,26 @@ export function PurchaseEvaluator({ profileId }: { profileId: string }) {
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
               )}
             </div>
-            {simAsync.data?.months ? (
+            {simAsync.data?.months ? (() => {
+              const rawMonths = simAsync.data!.months;
+              const first = rawMonths[0];
+              const baselineNcf = first
+                ? first.income_forecast - first.expense_forecast - first.other_debt_payment
+                : 0;
+              const baselineMonth: CashFlowMonthOut = {
+                month: 0,
+                year_month: "Hiện tại",
+                income_forecast: first?.income_forecast ?? 0,
+                expense_forecast: first?.expense_forecast ?? 0,
+                bnpl_payment: 0,
+                other_debt_payment: first?.other_debt_payment ?? 0,
+                net_cashflow: baselineNcf,
+                cumulative_balance: 0,
+                goal_savings: first?.goal_savings ?? 0,
+                warning: "",
+              };
+              const chartMonths = [baselineMonth, ...rawMonths];
+              return (
               <div className="mt-4">
                 {/* Plain-language narrative */}
                 <div className="mb-4 rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3">
@@ -418,17 +449,18 @@ export function PurchaseEvaluator({ profileId }: { profileId: string }) {
                   </div>
                   <div className="rounded-lg bg-slate-50 p-2.5">
                     <p className="text-slate-400">Tháng tiền âm</p>
-                    <p className={`mt-0.5 text-sm font-semibold ${simAsync.data.months.filter((m) => m.net_cashflow < 0).length > 0 ? "text-red-600" : "text-emerald-600"}`}>
-                      {simAsync.data.months.filter((m) => m.net_cashflow < 0).length} / 24
+                    <p className={`mt-0.5 text-sm font-semibold ${rawMonths.filter((m) => m.net_cashflow < 0).length > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                      {rawMonths.filter((m) => m.net_cashflow < 0).length} / 24
                     </p>
                   </div>
                 </div>
-                <CashflowChart months={simAsync.data.months} />
-                {simAsync.data.goal_impact_summary && (
-                  <p className="mt-3 text-xs text-slate-500">{simAsync.data.goal_impact_summary}</p>
+                <CashflowChart months={chartMonths} />
+                {simAsync.data!.goal_impact_summary && (
+                  <p className="mt-3 text-xs text-slate-500">{simAsync.data!.goal_impact_summary}</p>
                 )}
               </div>
-            ) : !simAsync.loading ? (
+              );
+            })() : !simAsync.loading ? (
               <p className="mt-4 text-sm text-slate-400">Chọn một phương án trong bảng để xem biểu đồ.</p>
             ) : null}
           </div>

@@ -23,9 +23,10 @@ const PLAN_NAMES: Record<string, string> = {
 };
 
 const FLAG_VI: Record<string, string> = {
-  'REQUIRES_EMERGENCY_FUND':  'Cần bổ sung quỹ khẩn cấp',
-  'EMERGENCY_FUND_DEPLETED':  'Quỹ khẩn cấp không đủ',
-  'HIGH_DTI':                 'Tỷ lệ nợ/thu nhập cao',
+  'NEGATIVE_CASHFLOW':        'Dòng tiền âm',
+  'REQUIRES_EMERGENCY_FUND':  'Cần bổ sung quỹ dự phòng',
+  'EMERGENCY_FUND_DEPLETED':  'Quỹ dự phòng không đủ',
+  'HIGH_DTI':                 'Tỷ lệ nợ cao',
   'DTI_EXCEEDS_LIMIT':        'Nợ vượt ngưỡng an toàn',
   'NEGATIVE_NCF':             'Dòng tiền tháng âm',
   'NCF_CRITICAL':             'Dòng tiền rất thấp',

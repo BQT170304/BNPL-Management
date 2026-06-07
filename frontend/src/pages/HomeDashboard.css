@@ -2,17 +2,23 @@
 .home-page { display: flex; flex-direction: column; min-height: 100vh; }
 
 .home-page .hero-header {
-  background: var(--gradient-hero);
-  padding: 20px 16px 24px;
+  background: var(--gradient-primary);
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
 }
 
-.hero-text { display: flex; flex-direction: column; gap: 4px; }
-.hero-greeting { color: white; font-size: var(--text-xl); font-weight: 700; }
-.hero-subtitle { color: rgba(255,255,255,0.7); font-size: var(--text-sm); }
+.hero-text { display: flex; flex-direction: column; gap: 2px; }
+.hero-greeting { color: white; font-size: var(--text-base); font-weight: 700; }
+.hero-subtitle { color: rgba(255,255,255,0.65); font-size: 12px; }
+
+.hero-health-badge {
+  font-size: 12px; font-weight: 600;
+  padding: 4px 12px; border-radius: var(--radius-full);
+  white-space: nowrap;
+}
 
 .metrics-grid {
   display: grid;
@@ -122,13 +128,14 @@
 /* ── Desktop (scoped to .home-page) ─────────────────── */
 @media (min-width: 768px) {
   .home-page .hero-header {
-    padding: 40px 48px;
-    min-height: 160px;
+    padding: 22px 48px 18px;
+    min-height: auto;
     align-items: center;
   }
 
-  .home-page .hero-greeting { font-size: 2rem; font-weight: 800; }
-  .home-page .hero-subtitle { font-size: var(--text-base); margin-top: 4px; }
+  .home-page .hero-greeting { font-size: var(--text-lg); font-weight: 700; }
+  .home-page .hero-subtitle { font-size: var(--text-sm); margin-top: 2px; }
+  .hero-health-badge { font-size: 13px; padding: 5px 16px; }
 
   .home-page .page-body {
     padding: 32px 48px;

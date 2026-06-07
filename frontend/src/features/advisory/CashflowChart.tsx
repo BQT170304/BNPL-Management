@@ -45,10 +45,11 @@ function TipContent({
 
 export function CashflowChart({ months }: { months: CashFlowMonthOut[] }) {
   const data = months.map((m) => ({
-    name: m.year_month.slice(2),
+    name: m.year_month === "Hiện tại" ? "Hiện tại" : m.year_month.slice(2),
     "Trả BNPL": m.bnpl_payment,
     "Dòng tiền ròng": m.net_cashflow,
     "Tích luỹ": m.cumulative_balance,
+    isPast: m.year_month === "Hiện tại",
   }));
 
   return (

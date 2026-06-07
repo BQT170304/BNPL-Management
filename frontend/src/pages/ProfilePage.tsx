@@ -93,9 +93,8 @@ export function ProfilePage({ profileId, onLogout, onProfileUpdated }: Props) {
   return (
     <div className="profile-page">
       <div className="profile-hero">
-        <div className="avatar">M</div>
-        <h2>Minh</h2>
-        <p>Khách hàng Demo</p>
+        <div className="avatar">H</div>
+        <h2>Huy</h2>
       </div>
 
       <div className="page-body">

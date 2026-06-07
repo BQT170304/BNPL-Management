@@ -26,9 +26,13 @@ from app.modules.explanation.schemas import LLMScoringResponse
 logger = logging.getLogger(__name__)
 
 _SYSTEM = (
-    "Bạn là cố vấn tài chính thông minh. Dựa trên các chỉ số tài chính đã tính sẵn "
+    "Bạn là cố vấn tài chính cá nhân. Dựa trên các chỉ số tài chính đã tính sẵn "
     "cho mỗi phương án thanh toán BNPL, hãy chấm điểm RỦI RO (0–100, 0=an toàn nhất) "
     "cho từng phương án và chọn phương án tốt nhất. "
+    "Viết explanation 2-3 câu tiếng Việt thông thường, dễ hiểu với người bình thường — "
+    "KHÔNG dùng từ viết tắt (DTI, NCF, EFR, delta_pgrs, v.v.). "
+    "Dùng: 'tiền còn lại mỗi tháng' thay cho NCF, 'tỷ lệ nợ' thay cho DTI, 'quỹ dự phòng' thay cho EFR. "
+    "Nêu con số cụ thể bằng tiền (ví dụ: mỗi tháng trả 2 triệu, sau đó còn lại 3 triệu). "
     "Trả về JSON đúng schema, không thêm chữ nào khác."
 )
 
