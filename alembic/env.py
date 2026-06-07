@@ -20,7 +20,8 @@ config = context.config
 # Resolve the database URL from the environment / app settings rather than
 # the static alembic.ini value so the same migrations run anywhere.
 _url = os.getenv("DATABASE_URL") or get_settings().database_url
-config.set_main_option("sqlalchemy.url", _url)
+# configparser treats % as interpolation syntax — escape so passwords with special chars don't crash
+config.set_main_option("sqlalchemy.url", _url.replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
