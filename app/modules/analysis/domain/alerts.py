@@ -21,6 +21,10 @@ class Alert:
     affected_value: float | None = None
 
 
+# Alias used by kiendv schemas
+FinancialAlert = Alert
+
+
 def check_alerts(metrics: ProfileMetrics) -> list[Alert]:
     """Generate financial health alerts from computed ProfileMetrics."""
     alerts: list[Alert] = []

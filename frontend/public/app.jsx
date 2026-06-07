@@ -5,6 +5,65 @@ const AB = window.BNPL;
 const API = window.API;
 const { useState, useEffect, useRef } = React;
 
+function LoginScreen({ onLogin }) {
+  const [username, setUsername] = useState("nguyenvana");
+  const [password, setPassword] = useState("123456");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function submit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await API.login(username, password);
+      API.saveToken(res.token);
+      onLogin(res.token);
+    } catch (err) {
+      setError(err.message || "Đăng nhập thất bại");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ display: "grid", placeItems: "center", height: "100vh", background: "var(--bg)" }}>
+      <div className="glass" style={{ width: 360, padding: "40px 36px", borderRadius: "var(--radius-lg)", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(150deg, var(--accent), var(--accent-strong))", display: "grid", placeItems: "center", margin: "0 auto 14px", boxShadow: "0 8px 22px -8px var(--accent-glow)" }}>
+            <Icon name="bolt" size={24} />
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>BNPL Assistant</div>
+          <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 4 }}>Đăng nhập để tiếp tục</div>
+        </div>
+
+        {error && (
+          <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171", borderRadius: 10, padding: "10px 14px", fontSize: 13 }}>{error}</div>
+        )}
+
+        <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 12.5, fontWeight: 500, color: "var(--ink-2)" }}>Tên đăng nhập</label>
+            <input value={username} onChange={e => setUsername(e.target.value)}
+              style={{ height: 42, borderRadius: 10, border: "1px solid var(--glass-line)", background: "rgba(255,255,255,0.06)", color: "var(--ink)", padding: "0 14px", fontSize: 14, outline: "none" }} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 12.5, fontWeight: 500, color: "var(--ink-2)" }}>Mật khẩu</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              style={{ height: 42, borderRadius: 10, border: "1px solid var(--glass-line)", background: "rgba(255,255,255,0.06)", color: "var(--ink)", padding: "0 14px", fontSize: 14, outline: "none" }} />
+          </div>
+          <button type="submit" disabled={loading}
+            style={{ height: 44, borderRadius: 10, background: "linear-gradient(150deg, var(--accent), var(--accent-strong))", color: "#0a0712", fontWeight: 700, fontSize: 14, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1, marginTop: 4 }}>
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+          </button>
+        </form>
+
+        <div style={{ textAlign: "center", fontSize: 11.5, color: "var(--ink-4)" }}>Demo: nguyenvana / 123456</div>
+      </div>
+    </div>
+  );
+}
+
 // strip UI-only fields -> ObligationIn for the backend
 function toObligationIn(o) {
   return {
@@ -50,6 +109,21 @@ const HUES = [
 ];
 
 function App() {
+  const [token, setToken] = useState(() => API.getToken());
+
+  // sync token state when localStorage is changed externally (e.g. DevTools)
+  useEffect(() => {
+    const onStorage = (e) => { if (e.key === "bnpl.token") setToken(e.newValue); };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  if (!token) return <LoginScreen onLogin={setToken} />;
+
+  return <AppShell token={token} onLogout={() => { API.saveToken(null); setToken(null); }} />;
+}
+
+function AppShell({ token, onLogout }) {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [toastNode, toast] = useToast();
   const storeRef = useRef({ decisions: {} });
@@ -307,6 +381,12 @@ function App() {
               <div style={{ fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{role === "user" ? subjectName : "RM Alice"}</div>
               <div className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)" }}>{role === "user" ? `CIF ${currentCif} · p1` : "operator"}</div>
             </div>
+            <button onClick={onLogout} title="Đăng xuất"
+              style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid var(--glass-line)", background: "transparent", cursor: "pointer", display: "grid", placeItems: "center", color: "var(--ink-3)", flexShrink: 0 }}
+              onMouseEnter={e => e.currentTarget.style.color = "#f87171"}
+              onMouseLeave={e => e.currentTarget.style.color = "var(--ink-3)"}>
+              <Icon name="logout" size={15} />
+            </button>
           </div>
         </aside>
 

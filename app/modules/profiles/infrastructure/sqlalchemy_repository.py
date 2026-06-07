@@ -66,6 +66,10 @@ class SqlAlchemyProfileRepository:
 
     async def add(self, profile: FinancialProfile) -> None:
         async with self._sessionmaker() as session:
+            existing = await session.get(ProfileModel, profile.id)
+            if existing is not None:
+                await session.delete(existing)
+                await session.flush()
             session.add(_to_model(profile))
             await session.commit()
 

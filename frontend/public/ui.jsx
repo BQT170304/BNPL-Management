@@ -28,6 +28,7 @@ function Icon({ name, size = 18, style }) {
     bolt: <path d="M13 3L5 13h6l-1 8 8-10h-6l1-8z" />,
     send: <path d="M4 12l16-7-7 16-2-7-7-2z" />,
     bell: <><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z" /><path d="M10 19a2 2 0 0 0 4 0" /></>,
+    logout: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>,
   };
   return <svg viewBox="0 0 24 24" style={s}>{P[name] || null}</svg>;
 }
@@ -152,6 +153,7 @@ function MetricCard({ label, value, sub, tone, badge, icon, accent }) {
 /* ---- Line chart (forecast) ---- */
 function LineChart({ months, height = 220 }) {
   const W = 720, H = height, padL = 56, padR = 16, padT = 18, padB = 34;
+  const [hov, setHov] = useState(null);
   const data = months;
   if (!data.length) return null;
   const vals = data.flatMap(m => [m.ending_balance, m.net_cashflow]);
@@ -164,8 +166,42 @@ function LineChart({ months, height = 220 }) {
     ` L${x(data.length - 1)},${y(min)} L${x(0)},${y(min)} Z`;
   const zeroY = y(0);
   const fmtAxis = (v) => Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(0) + "tr" : B.fmtNum(v / 1000) + "k";
+  const fmtFull = (v) => B.fmtVND(v);
+
+  const TW = 198, TH = 80, TPad = 10;
+  const renderTooltip = (i) => {
+    const m = data[i];
+    const cx = x(i), cy = y(m.ending_balance);
+    let tx = cx - TW / 2;
+    if (tx < padL) tx = padL;
+    if (tx + TW > W - padR) tx = W - padR - TW;
+    const ty = cy - TH - 12 < padT ? cy + 16 : cy - TH - 12;
+    const rows = [
+      ["Số dư cuối tháng", m.ending_balance],
+      ["Dòng tiền ròng", m.net_cashflow],
+      ...(m.monthly_payment != null ? [["Trả góp/tháng", m.monthly_payment]] : []),
+    ];
+    const rowH = (TH - TPad * 2 - 16) / rows.length;
+    return (
+      <g pointerEvents="none">
+        <rect x={tx} y={ty} width={TW} height={TH} rx="8" fill="var(--bg0, #1a1225)" stroke="var(--glass-line, rgba(255,255,255,0.12))" strokeWidth="1" opacity="0.97" />
+        <text x={tx + TPad} y={ty + TPad + 11} fontSize="11" fontWeight="600" fill="var(--ink, #f0eaf8)">{m.month}</text>
+        {rows.map(([label, val], ri) => {
+          const ry = ty + TPad + 24 + ri * rowH;
+          const tone = label.includes("ròng") ? (val < 0 ? "var(--danger,#f87171)" : "var(--safe,#34d399)") : "var(--accent)";
+          return (
+            <g key={label}>
+              <text x={tx + TPad} y={ry + 11} fontSize="10" fill="var(--ink-3, rgba(240,234,248,0.5))">{label}</text>
+              <text x={tx + TW - TPad} y={ry + 11} textAnchor="end" fontSize="10.5" fontWeight="700" fill={tone} className="num">{fmtFull(val)}</text>
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block" }}>
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block" }} onMouseLeave={() => setHov(null)}>
       <defs>
         <linearGradient id="areaG" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.35" />
@@ -179,15 +215,21 @@ function LineChart({ months, height = 220 }) {
         </g>
       ))}
       {min < 0 && max > 0 && <line x1={padL} y1={zeroY} x2={W - padR} y2={zeroY} stroke="var(--danger)" strokeOpacity="0.55" strokeDasharray="4 4" />}
+      {hov !== null && <line x1={x(hov)} y1={padT} x2={x(hov)} y2={H - padB} stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" />}
       <path d={areaPath} fill="url(#areaG)" />
       <path d={linePath("ending_balance")} fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" />
       <path d={linePath("net_cashflow")} fill="none" stroke="var(--accent-2)" strokeWidth="2" strokeDasharray="5 4" strokeLinejoin="round" />
       {data.map((m, i) => (
         <g key={i}>
-          <circle cx={x(i)} cy={y(m.ending_balance)} r="3.2" fill="var(--bg0)" stroke="var(--accent)" strokeWidth="2" />
+          <circle cx={x(i)} cy={y(m.ending_balance)} r={hov === i ? 5 : 3.2}
+            fill="var(--bg0)" stroke="var(--accent)" strokeWidth="2"
+            style={{ transition: "r 0.1s", cursor: "pointer" }} />
+          <circle cx={x(i)} cy={y(m.ending_balance)} r="14" fill="transparent"
+            onMouseEnter={() => setHov(i)} />
           <text x={x(i)} y={H - 12} textAnchor="middle" fontSize="10" fill="var(--ink-3)">{m.month.slice(2)}</text>
         </g>
       ))}
+      {hov !== null && renderTooltip(hov)}
     </svg>
   );
 }

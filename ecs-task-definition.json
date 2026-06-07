@@ -1,0 +1,37 @@
+{
+  "family": "bnpl-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::800511960708:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "bnpl-backend",
+      "image": "800511960708.dkr.ecr.us-east-1.amazonaws.com/bnpl-backend:latest",
+      "portMappings": [
+        { "containerPort": 8000, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "PERSISTENCE",      "value": "sqlite" },
+        { "name": "SQLITE_PATH",      "value": "/tmp/bnpl.db" },
+        { "name": "AUTH_ENABLED",     "value": "true" },
+        { "name": "AUTH_USERNAME",    "value": "nguyenvana" },
+        { "name": "AUTH_PASSWORD",    "value": "123456" },
+        { "name": "AUTH_TOKEN",       "value": "demo-token-bnpl" },
+        { "name": "FORECAST_ENGINE",  "value": "deterministic" },
+        { "name": "CORS_ORIGINS",     "value": "*" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group":         "/ecs/bnpl-backend",
+          "awslogs-region":        "us-east-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group":  "true"
+        }
+      },
+      "essential": true
+    }
+  ]
+}

@@ -1,9 +1,44 @@
 services:
-  db:
-    image: postgres:16
+  # ── Backend (FastAPI + uvicorn) ──────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
     environment:
-      POSTGRES_USER: bnpl
-      POSTGRES_PASSWORD: bnpl
-      POSTGRES_DB: bnpl
+      PERSISTENCE: sqlite
+      SQLITE_PATH: /data/bnpl.db
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:80,http://frontend"
+    volumes:
+      - db_data:/data          # persistent SQLite file
+      - ./data:/app/data:ro    # CSV data files (read-only)
+      - ./models:/app/models:ro
     ports:
-      - "5432:5432"
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Frontend (Vite dev server + API proxy) ───────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev              # use the 'dev' stage; switch to 'prod' for production
+    environment:
+      VITE_API_TARGET: "http://backend:8000"
+    volumes:
+      - ./frontend:/app        # hot-reload: mount source into container
+      - /app/node_modules      # keep container node_modules isolated
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db_data:

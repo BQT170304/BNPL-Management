@@ -1,0 +1,151 @@
+name: Deploy to AWS (dev)
+
+on:
+  push:
+    branches: [dev]
+
+env:
+  AWS_REGION:       us-east-1
+  AWS_ACCOUNT_ID:   "800511960708"
+  ECR_REPO:         bnpl-backend
+  ECS_CLUSTER:      bohu
+  ECS_SERVICE:      bnpl-backend-service
+  TASK_DEF_FILE:    ecs-task-definition.json
+  CONTAINER_NAME:   bnpl-backend
+  S3_BUCKET:        bohu-frontend
+  # Set CLOUDFRONT_DIST_ID as a GitHub secret once you create the distribution
+  # CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 1 — Build & push backend image, deploy to ECS
+  # ────────────────────────────────────────────────────────────────────────────
+  deploy-backend:
+    name: Backend → ECR + ECS
+    runs-on: ubuntu-latest
+
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to ECR
+        id: build
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG:    ${{ github.sha }}
+        run: |
+          IMAGE="$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Render ECS task definition with new image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition:  ${{ env.TASK_DEF_FILE }}
+          container-name:   ${{ env.CONTAINER_NAME }}
+          image:            ${{ steps.build.outputs.image }}
+
+      - name: Create ECS service if it does not exist
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          EXISTS=$(aws ecs describe-services \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE" \
+            --query "services[?status=='ACTIVE'].serviceName" \
+            --output text)
+
+          if [ -z "$EXISTS" ]; then
+            echo "Service not found — registering task definition and creating service..."
+
+            TASK_DEF_ARN=$(aws ecs register-task-definition \
+              --cli-input-json file://${{ steps.task-def.outputs.task-definition }} \
+              --query "taskDefinition.taskDefinitionArn" --output text)
+
+            aws ecs create-service \
+              --cluster "$ECS_CLUSTER" \
+              --service-name "$ECS_SERVICE" \
+              --task-definition "$TASK_DEF_ARN" \
+              --desired-count 1 \
+              --launch-type FARGATE \
+              --network-configuration "awsvpcConfiguration={
+                subnets=[subnet-0772e984ae088f691,subnet-0ff8998ccd68281e7],
+                securityGroups=[sg-0a7250901e8ad525c],
+                assignPublicIp=DISABLED
+              }"
+            echo "Service created."
+          else
+            echo "Service already exists — will be updated by the deploy step."
+          fi
+
+      - name: Deploy updated task definition to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition:  ${{ steps.task-def.outputs.task-definition }}
+          service:          ${{ env.ECS_SERVICE }}
+          cluster:          ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 2 — Deploy frontend static files to S3
+  # ────────────────────────────────────────────────────────────────────────────
+  deploy-frontend:
+    name: Frontend → S3
+    runs-on: ubuntu-latest
+    needs: deploy-backend   # ensures backend is live before frontend goes up
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Inject API base URL into config.js
+        # API_BASE_URL secret = the public URL of your ALB or CloudFront domain,
+        # e.g. "https://bnpl-alb-123.us-east-1.elb.amazonaws.com"
+        # Leave empty to use relative /api (only works behind a same-origin proxy)
+        run: |
+          API_BASE="${{ secrets.API_BASE_URL }}"
+          echo "window.API_BASE = \"${API_BASE}\";" > frontend/public/config.js
+          echo "Injected API_BASE: ${API_BASE}"
+
+      - name: Sync static files to S3
+        run: |
+          aws s3 sync frontend/public/ s3://${{ env.S3_BUCKET }}/ \
+            --delete \
+            --cache-control "public, max-age=300" \
+            --exclude "*.map"
+
+          # index.html and config.js should never be cached
+          aws s3 cp frontend/index.html s3://${{ env.S3_BUCKET }}/index.html \
+            --cache-control "no-cache, no-store, must-revalidate"
+          aws s3 cp frontend/public/config.js s3://${{ env.S3_BUCKET }}/config.js \
+            --cache-control "no-cache, no-store, must-revalidate"
+
+      # Uncomment once you have a CloudFront distribution:
+      # - name: Invalidate CloudFront cache
+      #   run: |
+      #     aws cloudfront create-invalidation \
+      #       --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} \
+      #       --paths "/*"

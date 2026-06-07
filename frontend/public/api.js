@@ -4,20 +4,32 @@
    ============================================================ */
 (function () {
   "use strict";
-  const BASE = "/api";
+  // In production (S3), window.API_BASE is injected by config.js at deploy time.
+  // In dev (Vite proxy), it falls back to the relative /api path.
+  const BASE = (window.API_BASE || "") + "/api";
+  const TOKEN_KEY = "bnpl.token";
+
+  function getToken() { return localStorage.getItem(TOKEN_KEY); }
+  function saveToken(t) { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); }
 
   async function req(path, init) {
+    const token = getToken();
     let res;
     try {
       res = await fetch(BASE + path, {
         ...init,
-        headers: { "Content-Type": "application/json", ...((init && init.headers) || {}) },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": "Bearer " + token } : {}),
+          ...((init && init.headers) || {}),
+        },
       });
     } catch (e) {
       throw new Error("Không kết nối được máy chủ");
     }
     const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (_) {}
     if (!res.ok) {
       const detail = data && data.detail ? data.detail : "Lỗi máy chủ (" + res.status + ")";
       const err = new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
@@ -25,6 +37,7 @@
       err.body = data;
       throw err;
     }
+    if (text && data === null) throw new Error("Không kết nối được máy chủ");
     return data;
   }
   const get = (p) => req(p, { method: "GET" });
@@ -32,6 +45,10 @@
   const del = (p) => req(p, { method: "DELETE" });
 
   window.API = {
+    // auth
+    login: (username, password) => post("/auth/login", { username, password }),
+    getToken,
+    saveToken,
     // consent
     grantConsent: (b) => post("/consents", b),
     getConsent: (id) => get("/consents/" + id),
