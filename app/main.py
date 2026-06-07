@@ -9,9 +9,13 @@ from fastapi.responses import JSONResponse
 from app.core.config import get_settings
 from app.core.errors import (
     CifNotFound,
+    ConsentNotFound,
+    ConsentRequired,
+    DecisionNotFound,
     DomainError,
     GoalNotFound,
     InvalidCredentials,
+    ObligationNotFound,
     ProfileNotFound,
     Unauthorized,
 )
@@ -19,8 +23,15 @@ from app.modules.advisory.api.router import router as advisory_router
 from app.modules.analysis.api.router import router as analysis_router
 from app.modules.auth.api.router import router as auth_router
 from app.modules.auth.api.security import require_auth
-from app.modules.forecasting.api.router import router as forecast_router
+from app.modules.consent.api.router import router as consent_router
+from app.modules.copilot.api.router import router as copilot_router
+from app.modules.decisions.api.router import router as decisions_router
+from app.modules.feedback.api.router import router as feedback_router
+from app.modules.forecasting.api.router import router as forecasting_router
 from app.modules.ingestion.api.router import router as ingestion_router
+from app.modules.obligations.api.router import router as obligations_router
+from app.modules.planning.api.router import router as planning_router
+from app.modules.portfolio.api.router import router as portfolio_router
 from app.modules.profiles.api.router import router as profiles_router
 
 DEMO_PROFILE_ID = "demo-profile"
@@ -141,12 +152,22 @@ def create_app() -> FastAPI:
     app.include_router(profiles_router, dependencies=protected)
     app.include_router(advisory_router, dependencies=protected)
     app.include_router(analysis_router, dependencies=protected)
+    app.include_router(consent_router, dependencies=protected)
     app.include_router(ingestion_router, dependencies=protected)
-    app.include_router(forecast_router, dependencies=protected)
+    app.include_router(obligations_router, dependencies=protected)
+    app.include_router(forecasting_router, dependencies=protected)
+    app.include_router(planning_router, dependencies=protected)
+    app.include_router(decisions_router, dependencies=protected)
+    app.include_router(feedback_router, dependencies=protected)
+    app.include_router(copilot_router, dependencies=protected)
+    app.include_router(portfolio_router, dependencies=protected)
 
     @app.exception_handler(ProfileNotFound)
     @app.exception_handler(GoalNotFound)
     @app.exception_handler(CifNotFound)
+    @app.exception_handler(ObligationNotFound)
+    @app.exception_handler(DecisionNotFound)
+    @app.exception_handler(ConsentNotFound)
     async def not_found(_: Request, exc: DomainError) -> JSONResponse:
         return JSONResponse(status_code=404, content={"detail": str(exc)})
 
@@ -154,6 +175,18 @@ def create_app() -> FastAPI:
     @app.exception_handler(Unauthorized)
     async def unauthorized(_: Request, exc: DomainError) -> JSONResponse:
         return JSONResponse(status_code=401, content={"detail": str(exc)})
+
+    @app.exception_handler(ConsentRequired)
+    async def consent_required(_: Request, exc: ConsentRequired) -> JSONResponse:
+        return JSONResponse(
+            status_code=403,
+            content={
+                "detail": str(exc),
+                "code": "CONSENT_REQUIRED",
+                "cif": exc.cif,
+                "scope": exc.scope,
+            },
+        )
 
     @app.exception_handler(DomainError)
     async def domain_error(_: Request, exc: DomainError) -> JSONResponse:

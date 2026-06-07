@@ -17,10 +17,37 @@ class GoalNotFound(DomainError):
         self.goal_id = goal_id
 
 
+class ObligationNotFound(DomainError):
+    def __init__(self, obligation_id: str) -> None:
+        super().__init__(f"Obligation not found: {obligation_id}")
+        self.obligation_id = obligation_id
+
+
+class DecisionNotFound(DomainError):
+    def __init__(self, decision_id: str) -> None:
+        super().__init__(f"Decision not found: {decision_id}")
+        self.decision_id = decision_id
+
+
 class CifNotFound(DomainError):
     def __init__(self, cif: str) -> None:
         super().__init__(f"CIF not found: {cif}")
         self.cif = cif
+
+
+class ConsentNotFound(DomainError):
+    def __init__(self, consent_id: str) -> None:
+        super().__init__(f"Consent not found: {consent_id}")
+        self.consent_id = consent_id
+
+
+class ConsentRequired(DomainError):
+    """Raised when CIF data is accessed without an active consent."""
+
+    def __init__(self, cif: str, scope: str) -> None:
+        super().__init__(f"Consent required for CIF {cif} scope {scope}")
+        self.cif = cif
+        self.scope = scope
 
 
 class InvalidInput(DomainError):

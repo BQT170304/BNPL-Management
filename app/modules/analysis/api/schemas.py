@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from app.modules.analysis.domain.alerts import FinancialAlert
 from app.modules.analysis.domain.results import ProfileMetrics
+from app.modules.forecasting.domain.warnings import ForecastAlert
 
 
 class AlertOut(BaseModel):
@@ -57,3 +59,35 @@ class MetricsOut(BaseModel):
             overall_health_score=m.overall_health_score,
             metric_statuses=m.metric_statuses,
         )
+
+
+class AlertOut(BaseModel):
+    code: str
+    level: str
+    message: str
+    recommendation: str
+    month: str | None = None
+
+    @classmethod
+    def from_domain(cls, alert: FinancialAlert) -> AlertOut:
+        return cls(
+            code=alert.code,
+            level=alert.level.value,
+            message=alert.message,
+            recommendation=alert.recommendation,
+            month=None,
+        )
+
+    @classmethod
+    def from_forecast(cls, alert: ForecastAlert) -> AlertOut:
+        return cls(
+            code=alert.code,
+            level=alert.level.value,
+            message=alert.message,
+            recommendation=alert.recommendation,
+            month=alert.month,
+        )
+
+
+class AlertsOut(BaseModel):
+    alerts: list[AlertOut]

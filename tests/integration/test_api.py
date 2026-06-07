@@ -55,6 +55,11 @@ async def test_create_and_analyze_profile(client):
     assert round(body["dti"], 2) == 37.93
     assert body["dti_band"] == "WARNING"
 
+    alerts = await client.get("/profiles/p1/alerts")
+    assert alerts.status_code == 200
+    codes = {a["code"] for a in alerts.json()["alerts"]}
+    assert "DTI_WARNING" in codes
+
 
 async def test_analyze_missing_profile_returns_404(client):
     r = await client.get("/profiles/ghost/analysis")
