@@ -13,6 +13,7 @@ env:
   TASK_DEF_FILE:    ecs-task-definition.json
   CONTAINER_NAME:   bnpl-backend
   S3_BUCKET:        bohu-frontend
+  ALB_DNS:          bohu-alb-325198050.us-east-1.elb.amazonaws.com
   # Set CLOUDFRONT_DIST_ID as a GitHub secret once you create the distribution
   # CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
 
@@ -62,8 +63,6 @@ jobs:
           image:            ${{ steps.build.outputs.image }}
 
       - name: Create ECS service if it does not exist
-        env:
-          IMAGE_TAG: ${{ github.sha }}
         run: |
           EXISTS=$(aws ecs describe-services \
             --cluster "$ECS_CLUSTER" \
@@ -88,7 +87,8 @@ jobs:
                 subnets=[subnet-0772e984ae088f691,subnet-0ff8998ccd68281e7],
                 securityGroups=[sg-0a7250901e8ad525c],
                 assignPublicIp=DISABLED
-              }"
+              }" \
+              --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:us-east-1:800511960708:targetgroup/bnpl-backend-tg/427aea41b4015cc5,containerName=bnpl-backend,containerPort=8000"
             echo "Service created."
           else
             echo "Service already exists — will be updated by the deploy step."
@@ -122,11 +122,12 @@ jobs:
           aws-region:            ${{ env.AWS_REGION }}
 
       - name: Inject API base URL into config.js
-        # API_BASE_URL secret = the public URL of your ALB or CloudFront domain,
-        # e.g. "https://bnpl-alb-123.us-east-1.elb.amazonaws.com"
-        # Leave empty to use relative /api (only works behind a same-origin proxy)
         run: |
+          # Use secret override if set, otherwise fall back to the known ALB DNS
           API_BASE="${{ secrets.API_BASE_URL }}"
+          if [ -z "$API_BASE" ]; then
+            API_BASE="http://${{ env.ALB_DNS }}"
+          fi
           echo "window.API_BASE = \"${API_BASE}\";" > frontend/public/config.js
           echo "Injected API_BASE: ${API_BASE}"
 
