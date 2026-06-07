@@ -1,0 +1,66 @@
+{
+  "family": "bnpl-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2048",
+  "memory": "4096",
+  "executionRoleArn": "arn:aws:iam::800511960708:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "bnpl-backend",
+      "image": "800511960708.dkr.ecr.us-east-1.amazonaws.com/bnpl-backend:latest",
+      "portMappings": [
+        { "containerPort": 8000, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "PERSISTENCE",             "value": "postgres" },
+        { "name": "AUTH_ENABLED",            "value": "true" },
+        { "name": "AUTH_USERNAME",           "value": "nguyenvana" },
+        { "name": "AUTH_PASSWORD",           "value": "123456" },
+        { "name": "AUTH_TOKEN",              "value": "demo-token-bnpl" },
+        { "name": "FORECAST_ENGINE",         "value": "deterministic" },
+        { "name": "BEDROCK_ENABLED",         "value": "false" },
+        { "name": "OPENROUTER_ENABLED",      "value": "true" },
+        { "name": "OPENROUTER_MODEL",        "value": "qwen/qwen3-14b" },
+        { "name": "AWS_REGION",              "value": "us-east-1" },
+        { "name": "ALLOCATION_STRATEGY",     "value": "weighted" },
+        { "name": "EFR_SAFE_MONTHS",         "value": "3" },
+        { "name": "FORECAST_HORIZON_DAYS",   "value": "90" },
+        { "name": "FORECAST_MIN_ACTIVE_DAYS","value": "20" },
+        { "name": "PROPHET_ENABLED",         "value": "false" },
+        { "name": "DEMO_CIF",               "value": "10000327" },
+        { "name": "LOCAL_LLM_ENABLED",       "value": "true" },
+        { "name": "LOCAL_LLM_URL",           "value": "http://203.113.152.4:7777/llm/v1/chat/completions" },
+        { "name": "LOCAL_LLM_MODEL",         "value": "Qwen3-14B" },
+        { "name": "ML_ENABLED",              "value": "true" },
+        { "name": "ML_MODEL_PATH",           "value": "models/pd_model.pkl" },
+        { "name": "TRANSACTIONS_CSV_PATH",   "value": "data/transactions_labeled.csv" },
+        { "name": "CORS_ORIGINS",            "value": "*" }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:ssm:us-east-1:800511960708:parameter/bnpl/prod/DATABASE_URL"
+        },
+        {
+          "name": "LOCAL_LLM_AUTH",
+          "valueFrom": "arn:aws:ssm:us-east-1:800511960708:parameter/bnpl/prod/LOCAL_LLM_AUTH"
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:800511960708:parameter/bnpl/prod/OPENROUTER_API_KEY"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group":         "/ecs/bnpl-backend",
+          "awslogs-region":        "us-east-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group":  "true"
+        }
+      },
+      "essential": true
+    }
+  ]
+}

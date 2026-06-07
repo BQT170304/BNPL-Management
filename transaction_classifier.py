@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Phân loại giao dịch ngân hàng theo từng khách hàng (CIF).
 

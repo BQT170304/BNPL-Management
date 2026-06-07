@@ -1,7 +1,7 @@
 // frontend/src/api/client.ts
 const BASE = "/api";
 
-const TOKEN_KEY = "bnpl.token";
+export const TOKEN_KEY = "bnpl.token";
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }

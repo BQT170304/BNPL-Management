@@ -1,12 +1,36 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BNPL Assistant</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BNPL Assistant — Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + in-browser Babel (design prototype model) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- runtime config: API_BASE injected by CI at deploy time -->
+  <script src="/config.js"></script>
+
+  <!-- real backend client + data layer (plain JS, global scope) -->
+  <script src="/api.js"></script>
+  <script src="/store.js"></script>
+
+  <!-- UI primitives + screens + app (compiled in-browser by Babel) -->
+  <script type="text/babel" src="/tweaks-panel.jsx"></script>
+  <script type="text/babel" src="/ui.jsx"></script>
+  <script type="text/babel" src="/user-screens-a.jsx"></script>
+  <script type="text/babel" src="/user-screens-b.jsx"></script>
+  <script type="text/babel" src="/user-screens-c.jsx"></script>
+  <script type="text/babel" src="/rm-screens.jsx"></script>
+  <script type="text/babel" src="/app.jsx"></script>
+</body>
 </html>

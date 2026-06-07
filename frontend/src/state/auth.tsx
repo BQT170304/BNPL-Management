@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
-import { getToken, setToken } from "../api/client";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { getToken, setToken, TOKEN_KEY } from "../api/client";
 import { login as loginRequest } from "../api/endpoints";
 
 interface Ctx {
@@ -12,6 +12,16 @@ const AuthContext = createContext<Ctx | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setTokenState] = useState<string | null>(() => getToken());
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === TOKEN_KEY) {
+        setTokenState(e.newValue);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const login = useCallback(async (username: string, password: string) => {
     const res = await loginRequest(username, password);

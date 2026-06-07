@@ -2,16 +2,20 @@ from __future__ import annotations
 
 from datetime import date
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
 from app.core.errors import (
     CifNotFound,
+    ConsentNotFound,
+    ConsentRequired,
+    DecisionNotFound,
     DomainError,
     GoalNotFound,
     InvalidCredentials,
+    ObligationNotFound,
     ProfileNotFound,
     Unauthorized,
 )
@@ -19,8 +23,15 @@ from app.modules.advisory.api.router import router as advisory_router
 from app.modules.analysis.api.router import router as analysis_router
 from app.modules.auth.api.router import router as auth_router
 from app.modules.auth.api.security import require_auth
-from app.modules.forecasting.api.router import router as forecast_router
+from app.modules.consent.api.router import router as consent_router
+from app.modules.copilot.api.router import router as copilot_router
+from app.modules.decisions.api.router import router as decisions_router
+from app.modules.feedback.api.router import router as feedback_router
+from app.modules.forecasting.api.router import router as forecasting_router
 from app.modules.ingestion.api.router import router as ingestion_router
+from app.modules.obligations.api.router import router as obligations_router
+from app.modules.planning.api.router import router as planning_router
+from app.modules.portfolio.api.router import router as portfolio_router
 from app.modules.profiles.api.router import router as profiles_router
 
 DEMO_PROFILE_ID = "demo-profile"
@@ -35,6 +46,8 @@ async def _seed_demo_profile() -> None:
     from app.modules.profiles.domain.value_objects import (
         AssetType, DebtType, ExpenseClass, Liquidity, RiskTolerance,
     )
+
+    from sqlalchemy.exc import IntegrityError
 
     repo = get_repository()
     try:
@@ -111,7 +124,10 @@ async def _seed_demo_profile() -> None:
             ),
         ],
     )
-    await repo.add(demo)
+    try:
+        await repo.add(demo)
+    except IntegrityError:
+        pass  # another worker already inserted it (race on startup)
 
 
 def create_app() -> FastAPI:
@@ -137,16 +153,28 @@ def create_app() -> FastAPI:
     )
 
     protected = [Depends(require_auth)]
-    app.include_router(auth_router)
-    app.include_router(profiles_router, dependencies=protected)
-    app.include_router(advisory_router, dependencies=protected)
-    app.include_router(analysis_router, dependencies=protected)
-    app.include_router(ingestion_router, dependencies=protected)
-    app.include_router(forecast_router, dependencies=protected)
+    api = APIRouter(prefix="/api")
+    api.include_router(auth_router)
+    api.include_router(profiles_router, dependencies=protected)
+    api.include_router(advisory_router, dependencies=protected)
+    api.include_router(analysis_router, dependencies=protected)
+    api.include_router(consent_router, dependencies=protected)
+    api.include_router(ingestion_router, dependencies=protected)
+    api.include_router(obligations_router, dependencies=protected)
+    api.include_router(forecasting_router, dependencies=protected)
+    api.include_router(planning_router, dependencies=protected)
+    api.include_router(decisions_router, dependencies=protected)
+    api.include_router(feedback_router, dependencies=protected)
+    api.include_router(copilot_router, dependencies=protected)
+    api.include_router(portfolio_router, dependencies=protected)
+    app.include_router(api)
 
     @app.exception_handler(ProfileNotFound)
     @app.exception_handler(GoalNotFound)
     @app.exception_handler(CifNotFound)
+    @app.exception_handler(ObligationNotFound)
+    @app.exception_handler(DecisionNotFound)
+    @app.exception_handler(ConsentNotFound)
     async def not_found(_: Request, exc: DomainError) -> JSONResponse:
         return JSONResponse(status_code=404, content={"detail": str(exc)})
 
@@ -155,15 +183,28 @@ def create_app() -> FastAPI:
     async def unauthorized(_: Request, exc: DomainError) -> JSONResponse:
         return JSONResponse(status_code=401, content={"detail": str(exc)})
 
+    @app.exception_handler(ConsentRequired)
+    async def consent_required(_: Request, exc: ConsentRequired) -> JSONResponse:
+        return JSONResponse(
+            status_code=403,
+            content={
+                "detail": str(exc),
+                "code": "CONSENT_REQUIRED",
+                "cif": exc.cif,
+                "scope": exc.scope,
+            },
+        )
+
     @app.exception_handler(DomainError)
     async def domain_error(_: Request, exc: DomainError) -> JSONResponse:
         return JSONResponse(status_code=400, content={"detail": str(exc)})
 
     @app.get("/health")
+    @api.get("/health")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.get("/demo-profile-id")
+    @api.get("/demo-profile-id")
     async def demo_profile_id() -> dict[str, str]:
         return {"id": DEMO_PROFILE_ID}
 

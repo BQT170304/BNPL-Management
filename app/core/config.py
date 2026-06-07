@@ -20,6 +20,8 @@ class Settings(BaseSettings):
 
     allocation_strategy: Literal["weighted", "even"] = "weighted"
     efr_safe_months: int = 3
+    low_confidence_threshold: float = 0.7
+    forecast_engine: Literal["deterministic", "prophet"] = "deterministic"
 
     ingestion_csv_path: str = "data/summary_by_cif_month.csv"
     cors_origins: str = "http://localhost:5173"
@@ -43,6 +45,11 @@ class Settings(BaseSettings):
     local_llm_url: str = "http://203.113.152.4:7777/llm/v1/chat/completions"
     local_llm_auth: str = "Basic dmlldHRlbF9haTpWYWlAMjAyNQ=="
     local_llm_model: str = "Qwen3-14B"
+
+    # ── OpenRouter (cloud LLM fallback) ─────────────────────────────────────
+    openrouter_enabled: bool = False
+    openrouter_api_key: str = ""
+    openrouter_model: str = "qwen/qwen3-14b"
 
     # ── ML PD (Probability of Default) model — trained on Taiwan Credit Card Default data ──
     ml_model_path: str = "models/pd_model.pkl"

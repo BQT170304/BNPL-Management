@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from pydantic import BaseModel
 
-from app.dependencies import get_analysis_service, get_repository
-from app.modules.analysis.api.schemas import MetricsOut
+from app.core.config import get_settings
+from app.dependencies import get_analysis_service, get_forecast_service, get_repository
+from app.modules.analysis.api.schemas import AlertOut, AlertsOut, MetricsOut
 from app.modules.analysis.application.services import AnalysisService
+from app.modules.analysis.domain.alerts import check_alerts
+from app.modules.forecasting.application.services import ForecastService
+from app.modules.forecasting.domain.warnings import forecast_alerts
 from app.modules.profiles.api.mappers import from_domain, to_domain
 from app.modules.profiles.api.schemas import (
     DebtIn, ExpenseIn, GoalIn, IncomeIn, ProfileIn,
@@ -153,3 +157,25 @@ async def extract_profile_from_file(
             cif=ext.cif,
         ),
     )
+
+
+@router.get("/profiles/{profile_id}/alerts", response_model=AlertsOut)
+async def profile_alerts(
+    profile_id: str,
+    include_forecast: bool = False,
+    months: int = Query(default=6, ge=1, le=24),
+    repo: ProfileRepository = Depends(get_repository),
+    analysis: AnalysisService = Depends(get_analysis_service),
+    forecast: ForecastService = Depends(get_forecast_service),
+) -> AlertsOut:
+    profile = await repo.get(profile_id)
+    alerts = [AlertOut.from_domain(alert) for alert in check_alerts(analysis.analyze(profile))]
+    if include_forecast:
+        result = await forecast.forecast(profile, months=months)
+        projected = forecast_alerts(
+            result,
+            profile,
+            safe_months=get_settings().efr_safe_months,
+        )
+        alerts.extend(AlertOut.from_forecast(alert) for alert in projected)
+    return AlertsOut(alerts=alerts)
