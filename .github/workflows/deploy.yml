@@ -18,8 +18,8 @@ env:
   CONTAINER_NAME:   bnpl-backend
   S3_BUCKET:        bohu-frontend
   ALB_DNS:          bohu-alb-325198050.us-east-1.elb.amazonaws.com
-  # Set CLOUDFRONT_DIST_ID as a GitHub secret once you create the distribution
-  # CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+  CLOUDFRONT_DIST:  E254OK1RKJMEXA
+  CLOUDFRONT_URL:   https://d2ttyqgmp7bw35.cloudfront.net
 
 jobs:
   # ────────────────────────────────────────────────────────────────────────────
@@ -123,16 +123,6 @@ jobs:
           role-to-assume: arn:aws:iam::800511960708:role/GitHubActions-BNPL-Deploy
           aws-region:     ${{ env.AWS_REGION }}
 
-      - name: Inject API base URL into config.js
-        run: |
-          # Use secret override if set, otherwise fall back to the known ALB DNS
-          API_BASE="${{ secrets.API_BASE_URL }}"
-          if [ -z "$API_BASE" ]; then
-            API_BASE="http://${{ env.ALB_DNS }}"
-          fi
-          echo "window.API_BASE = \"${API_BASE}\";" > frontend/public/config.js
-          echo "Injected API_BASE: ${API_BASE}"
-
       - name: Sync static files to S3
         run: |
           aws s3 sync frontend/public/ s3://${{ env.S3_BUCKET }}/ \
@@ -140,15 +130,14 @@ jobs:
             --cache-control "public, max-age=300" \
             --exclude "*.map"
 
-          # index.html and config.js should never be cached
+          # index.html and config.js must never be cached
           aws s3 cp frontend/index.html s3://${{ env.S3_BUCKET }}/index.html \
             --cache-control "no-cache, no-store, must-revalidate"
           aws s3 cp frontend/public/config.js s3://${{ env.S3_BUCKET }}/config.js \
             --cache-control "no-cache, no-store, must-revalidate"
 
-      # Uncomment once you have a CloudFront distribution:
-      # - name: Invalidate CloudFront cache
-      #   run: |
-      #     aws cloudfront create-invalidation \
-      #       --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} \
-      #       --paths "/*"
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E254OK1RKJMEXA \
+            --paths "/*"
