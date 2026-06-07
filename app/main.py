@@ -47,6 +47,8 @@ async def _seed_demo_profile() -> None:
         AssetType, DebtType, ExpenseClass, Liquidity, RiskTolerance,
     )
 
+    from sqlalchemy.exc import IntegrityError
+
     repo = get_repository()
     try:
         await repo.get(DEMO_PROFILE_ID)
@@ -122,7 +124,10 @@ async def _seed_demo_profile() -> None:
             ),
         ],
     )
-    await repo.add(demo)
+    try:
+        await repo.add(demo)
+    except IntegrityError:
+        pass  # another worker already inserted it (race on startup)
 
 
 def create_app() -> FastAPI:
