@@ -2,8 +2,8 @@
   "family": "bnpl-backend",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "cpu": "512",
-  "memory": "1024",
+  "cpu": "2048",
+  "memory": "4096",
   "executionRoleArn": "arn:aws:iam::800511960708:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
