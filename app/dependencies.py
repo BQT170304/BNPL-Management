@@ -24,6 +24,7 @@ from app.modules.explanation.application.explain_service import ExplainService
 from app.modules.explanation.infrastructure.bedrock_scorer import BedrockScorer
 from app.modules.explanation.infrastructure.hard_rule_scorer import HardRuleScorer
 from app.modules.explanation.infrastructure.local_llm_scorer import LocalLLMScorer
+from app.modules.explanation.infrastructure.openrouter_scorer import OpenRouterScorer
 from app.modules.explanation.infrastructure.pd_backed_scorer import PDBackedScorer
 from app.modules.feedback.application.ports import OutcomeRepository
 from app.modules.feedback.application.services import FeedbackService
@@ -79,7 +80,7 @@ def get_db_engine():
 
 def get_scorer() -> RiskScorer:
     """Scorer priority (outermost wins, each wraps the next as fallback):
-    LocalLLM → PD model → Bedrock → HardRules
+    LocalLLM → OpenRouter → PD model → Bedrock → HardRules
     """
     s = get_settings()
     base: RiskScorer = HardRuleScorer()
@@ -92,6 +93,13 @@ def get_scorer() -> RiskScorer:
         pd = PDScorer(model_path=s.ml_model_path)
         if pd.is_available():
             base = PDBackedScorer(pd_scorer=pd, fallback=base)
+
+    if s.openrouter_enabled and s.openrouter_api_key:
+        base = OpenRouterScorer(
+            api_key=s.openrouter_api_key,
+            model=s.openrouter_model,
+            fallback=base,
+        )
 
     if s.local_llm_enabled:
         base = LocalLLMScorer(

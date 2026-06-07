@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     local_llm_auth: str = "Basic dmlldHRlbF9haTpWYWlAMjAyNQ=="
     local_llm_model: str = "Qwen3-14B"
 
+    # ── OpenRouter (cloud LLM fallback) ─────────────────────────────────────
+    openrouter_enabled: bool = False
+    openrouter_api_key: str = ""
+    openrouter_model: str = "qwen/qwen3-14b"
+
     # ── ML PD (Probability of Default) model — trained on Taiwan Credit Card Default data ──
     ml_model_path: str = "models/pd_model.pkl"
     ml_enabled: bool = True   # auto-detected: only active when model file exists

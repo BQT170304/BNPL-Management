@@ -20,6 +20,8 @@
         { "name": "AUTH_TOKEN",              "value": "demo-token-bnpl" },
         { "name": "FORECAST_ENGINE",         "value": "deterministic" },
         { "name": "BEDROCK_ENABLED",         "value": "false" },
+        { "name": "OPENROUTER_ENABLED",      "value": "true" },
+        { "name": "OPENROUTER_MODEL",        "value": "qwen/qwen3-14b" },
         { "name": "AWS_REGION",              "value": "us-east-1" },
         { "name": "ALLOCATION_STRATEGY",     "value": "weighted" },
         { "name": "EFR_SAFE_MONTHS",         "value": "3" },
@@ -43,6 +45,10 @@
         {
           "name": "LOCAL_LLM_AUTH",
           "valueFrom": "arn:aws:ssm:us-east-1:800511960708:parameter/bnpl/prod/LOCAL_LLM_AUTH"
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:800511960708:parameter/bnpl/prod/OPENROUTER_API_KEY"
         }
       ],
       "logConfiguration": {
