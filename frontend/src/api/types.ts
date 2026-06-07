@@ -56,6 +56,7 @@ export interface GoalMetricOut {
   name: string;
   gap: number;
   monthly_allocated: number;
+  savings_planned: number;
   gat: number;
   delay: number;
   grs: number;

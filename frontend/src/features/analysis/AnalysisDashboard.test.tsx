@@ -10,6 +10,7 @@ const METRICS: MetricsOut = {
   ncf: 1_200_000, dti: 37.93, dti_band: "WARNING", saving_rate: 8.28,
   efr: 2.94, pgrs: 100,
   goals: [{ goal_id: "g1", name: "Car", gap: 300_000_000, monthly_allocated: 400_000,
+            savings_planned: 2_000_000,
             gat: 750, delay: 720, grs: 100, months_remaining: 30 }],
   flags: [],
   overall_health_score: 50,

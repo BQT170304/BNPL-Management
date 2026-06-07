@@ -14,13 +14,13 @@ const fmt = (n: number) => n >= 1_000_000
   : `${n.toLocaleString('vi-VN')} ₫`;
 
 const PLAN_NAMES: Record<string, string> = {
-  'full':          'Thanh toán 1 lần',
-  'pay_in_full':   'Thanh toán 1 lần',
-  'PAY_IN_FULL':   'Thanh toán 1 lần',
-  'installment_1': 'BNPL 1 tháng',
-  'installment_3': 'BNPL 3 tháng',
-  'installment_6': 'BNPL 6 tháng',
-  'installment_12':'BNPL 12 tháng',
+  'full':          'Trả thẳng 1 lần',
+  'pay_in_full':   'Trả thẳng 1 lần',
+  'PAY_IN_FULL':   'Trả thẳng 1 lần',
+  'installment_1': 'Trả thẳng 1 lần',
+  'installment_3': 'Trả góp 3 tháng',
+  'installment_6': 'Trả góp 6 tháng',
+  'installment_12':'Trả góp 12 tháng',
 };
 
 const FLAG_VI: Record<string, string> = {

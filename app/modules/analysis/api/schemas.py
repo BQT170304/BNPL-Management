@@ -24,6 +24,7 @@ class GoalMetricOut(BaseModel):
     name: str
     gap: int
     monthly_allocated: int
+    savings_planned: int
     gat: float
     delay: float
     grs: float

@@ -187,7 +187,16 @@ export function HomeDashboard({ profileId, cif }: Props) {
                         />
                       </div>
                       <div className="goal-detail-meta">
-                        <span>{fmtFull(g.monthly_allocated)}/tháng</span>
+                        <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#64748b' }}>
+                          <div>
+                            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Kế hoạch của bạn</div>
+                            <div style={{ fontWeight: 600, color: '#1e293b' }}>{fmtFull(g.savings_planned)}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 2 }}>Khả năng chi trả</div>
+                            <div style={{ fontWeight: 600, color: '#1e293b' }}>{fmtFull(g.monthly_allocated)}/tháng</div>
+                          </div>
+                        </div>
                         <span>{g.delay > 0 ? `Trễ ${g.delay.toFixed(0)} tháng` : "Đúng hạn"}</span>
                       </div>
                     </div>

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import anyio
 from fastapi import APIRouter, Depends
 
 import app.dependencies as deps
@@ -34,7 +35,8 @@ async def get_advice(
     """AI-generated brief financial health advice for the home dashboard."""
     profile = await repo.get(profile_id)
     metrics = analysis.analyze(profile)
-    result = explain_svc.advise_home(metrics)
+    # advise_home may call an LLM via blocking urllib — offload to a thread
+    result = await anyio.to_thread.run_sync(lambda: explain_svc.advise_home(metrics))
     return AdviceOut(advice=result.advice, scorer_used=result.scorer_used)
 
 

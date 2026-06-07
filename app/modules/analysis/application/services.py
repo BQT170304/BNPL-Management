@@ -45,6 +45,7 @@ class AnalysisService:
                 grs_value = f.grs(delay, months)
             goal_metrics.append(GoalMetric(
                 goal_id=goal.id, name=goal.name, gap=gap, monthly_allocated=monthly,
+                savings_planned=goal.savings_allocated,
                 gat=gat_value, delay=delay, grs=grs_value, months_remaining=months,
             ))
             weighted.append((grs_value, goal.priority.weight))

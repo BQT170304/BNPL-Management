@@ -11,7 +11,8 @@ class GoalMetric:
     goal_id: str
     name: str
     gap: int
-    monthly_allocated: int
+    monthly_allocated: int   # "khả năng chi trả": chia từ NCF theo ưu tiên
+    savings_planned: int     # "kế hoạch của bạn": số người dùng tự đặt cho mục tiêu
     gat: float
     delay: float
     grs: float

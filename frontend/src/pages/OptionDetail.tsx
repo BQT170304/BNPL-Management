@@ -17,13 +17,12 @@ const FLAG_VI: Record<string, string> = {
 };
 
 const OPTION_NAMES: Record<string, string> = {
-  'full': 'Thanh toán 1 lần',
-  'pay_in_full': 'Thanh toán 1 lần',
+  'full': 'Trả thẳng 1 lần',
+  'pay_in_full': 'Trả thẳng 1 lần',
+  'installment_1': 'Trả thẳng 1 lần',
+  'installment_3': 'Trả góp 3 tháng',
   'installment_6': 'Trả góp 6 tháng',
   'installment_12': 'Trả góp 12 tháng',
-  'installment_4': 'Trả góp 4 tháng',
-  'bnpl_4': 'BNPL 4 kỳ',
-  'cc_12': 'Thẻ tín dụng',
 };
 
 interface LocationState {

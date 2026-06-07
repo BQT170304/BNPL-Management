@@ -9,11 +9,11 @@ const CATEGORIES = ['Công nghệ', 'Thời trang', 'Gia dụng', 'Du lịch', '
 
 // Vietnamese market rates (Kredivo benchmark: 0% ≤3 months, 2%–2.1%/tháng after)
 const ALL_PLANS = [
-  { label: 'Trả thẳng',    type: 'PAY_IN_FULL' as const, months: null as number | null, apr: 0 },
-  { label: 'BNPL 1 tháng', type: 'INSTALLMENT' as const, months: 1,  apr: 0 },
-  { label: 'BNPL 3 tháng', type: 'INSTALLMENT' as const, months: 3,  apr: 0 },
-  { label: 'BNPL 6 tháng', type: 'INSTALLMENT' as const, months: 6,  apr: 24 },
-  { label: 'BNPL 12 tháng',type: 'INSTALLMENT' as const, months: 12, apr: 25.2 },
+  // { label: 'Trả thẳng 1 lần', type: 'PAY_IN_FULL' as const, months: null as number | null, apr: 0 },
+  { label: 'Trả góp 1 tháng', type: 'INSTALLMENT' as const, months: 1,  apr: 0 },
+  { label: 'Trả góp 3 tháng', type: 'INSTALLMENT' as const, months: 3,  apr: 0 },
+  { label: 'Trả góp 6 tháng', type: 'INSTALLMENT' as const, months: 6,  apr: 24 },
+  { label: 'Trả góp 12 tháng',type: 'INSTALLMENT' as const, months: 12, apr: 25.2 },
 ];
 
 interface Props { profileId: string; cif: string; }
@@ -102,7 +102,7 @@ export function PurchaseAdvisor({ profileId, cif }: Props) {
         {error && <div className="error-msg">{error}</div>}
 
         <button className="primary-btn" onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Đang phân tích 5 kịch bản...' : 'Phân tích ngay'}
+          {loading ? 'Đang phân tích 4 kịch bản...' : 'Phân tích ngay'}
         </button>
       </div>
     </div>

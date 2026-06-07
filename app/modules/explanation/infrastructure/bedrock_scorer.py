@@ -23,7 +23,12 @@ _SYSTEM = (
     "(2) chọn phương án tốt nhất, (3) viết giải thích 2-3 câu tiếng Việt thông thường, dễ hiểu với người bình thường. "
     "KHÔNG dùng thuật ngữ tài chính chuyên môn hay chữ viết tắt (không dùng DTI, NCF, EFR, delta_pgrs, v.v.). "
     "Thay vào đó dùng: 'tiền còn lại mỗi tháng' thay cho NCF, 'tỷ lệ nợ so với thu nhập' thay cho DTI, "
-    "'quỹ dự phòng' thay cho EFR. Nêu cụ thể con số bằng tiền (ví dụ: còn lại 2 triệu/tháng, lãi phát sinh 1.5 triệu). "
+    "'quỹ dự phòng' thay cho EFR. Nêu cụ thể con số bằng tiền. "
+    "QUAN TRỌNG về phương án trả 1 lần (pay_in_full): "
+    "chỉ tháng mua bị trừ toàn bộ số tiền (dùng purchase_month_cashflow), "
+    "các tháng sau trở lại bình thường (dùng cashflow_after_purchase_month). "
+    "Nếu purchase_month_cashflow âm thì phải nói rõ 'cần dùng quỹ dự phòng tháng đó'. "
+    "KHÔNG nói 'tiền còn lại không đổi' hay 'không ảnh hưởng' với phương án trả 1 lần. "
     "CHỈ trả về JSON đúng schema, không thêm gì khác."
 )
 
@@ -33,21 +38,37 @@ class BedrockClient(Protocol):
 
 
 def _build_prompt(packet: ScoringPacket) -> str:
+    from app.modules.advisory.domain.options import PlanType
+
     options = []
     for o in packet.options:
+        is_full = o.option.type == PlanType.PAY_IN_FULL
         opt: dict = {
             "option_id": o.option.id,
             "label": o.option.label,
+            "payment_type": "pay_in_full" if is_full else "installment",
             "monthly_payment": o.payment,
             "total_interest": o.total_interest,
-            "ncf_new": o.ncf_new,
-            "ncf_change": o.ncf_new - packet.current_ncf,
             "dti_new": round(o.dti_new, 2),
             "efr_after": round(o.efr_after, 2),
             "efr_safety": o.efr_safety,
             "delta_pgrs": round(o.delta_pgrs, 2),
             "flags": o.flags,
         }
+        if is_full:
+            # One-time hit in the purchase month, then back to normal.
+            opt["upfront_payment"] = o.option.upfront
+            opt["purchase_month_cashflow"] = packet.current_ncf - o.option.upfront
+            opt["cashflow_after_purchase_month"] = packet.current_ncf
+            opt["note"] = (
+                "Trả 1 lần: chỉ tháng mua bị trừ trọn số tiền (tiền còn lại tháng đó "
+                f"= {packet.current_ncf - o.option.upfront:,.0f}đ, có thể âm phải lấy từ quỹ dự phòng); "
+                "từ tháng sau dòng tiền trở lại bình thường, không phải trả góp."
+            )
+        else:
+            # Recurring monthly payment for the whole term.
+            opt["ncf_new"] = o.ncf_new
+            opt["ncf_change"] = o.ncf_new - packet.current_ncf
         if o.goal_impacts:
             opt["goal_impacts"] = [
                 {
@@ -77,7 +98,12 @@ def _build_prompt(packet: ScoringPacket) -> str:
                     "option_id": "str",
                     "risk_score": "0-100 (0=safest)",
                     "recommended": "bool",
-                    "explanation": "2-3 câu tiếng Việt đơn giản: nêu tiền trả mỗi tháng, lãi phát sinh, tiền còn lại — không dùng DTI/NCF/EFR",
+                    "explanation": (
+                        "2-3 câu tiếng Việt đơn giản. Với phương án trả 1 lần: nói rõ tháng mua "
+                        "bị trừ trọn số tiền (nêu tiền còn lại tháng đó, nếu âm thì phải dùng quỹ dự phòng), "
+                        "các tháng sau trở lại bình thường. Với trả góp: nêu tiền trả mỗi tháng và "
+                        "tiền còn lại mỗi tháng trong suốt kỳ. Không dùng DTI/NCF/EFR."
+                    ),
                     "key_factors": ["str"],
                 }
             ],

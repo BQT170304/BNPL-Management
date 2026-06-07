@@ -61,6 +61,8 @@ Trả về JSON theo schema sau (không thêm gì khác):
 
 
 def _build_facts(result: EvaluationResult) -> str:
+    from app.modules.advisory.domain.options import PlanType
+
     lines: list[str] = []
     lines.append(f"Thu nhập ròng hiện tại: {result.metrics.ncf:,.0f} đ/tháng")
     lines.append(f"Quỹ khẩn cấp hiện tại: {result.metrics.efr:.1f} tháng chi tiêu thiết yếu")
@@ -74,11 +76,15 @@ def _build_facts(result: EvaluationResult) -> str:
             lines.append(f"{label}: không khả thi ({', '.join(p.flags)})")
             continue
         lines.append(f"{label}:")
-        if p.payment:
-            lines.append(f"  - Thanh toán: {p.payment:,.0f} đ/tháng")
+        if p.option.type == PlanType.PAY_IN_FULL:
+            purchase_month_ncf = result.metrics.ncf - p.option.upfront
+            lines.append(f"  - Trả 1 lần ngay tháng mua: {p.option.upfront:,.0f} đ")
+            lines.append(f"  - Dòng tiền THÁNG MUA: {purchase_month_ncf:,.0f} đ "
+                         f"({'ÂM — phải dùng quỹ dự phòng' if purchase_month_ncf < 0 else 'dương'})")
+            lines.append(f"  - Dòng tiền các tháng SAU: {result.metrics.ncf:,.0f} đ/tháng (trở lại bình thường)")
         else:
-            lines.append(f"  - Trả 1 lần: {p.option.upfront:,.0f} đ")
-        lines.append(f"  - Dòng tiền còn lại: {p.ncf_new:,.0f} đ/tháng")
+            lines.append(f"  - Thanh toán: {p.payment:,.0f} đ/tháng (trong {p.option.months} tháng)")
+            lines.append(f"  - Dòng tiền còn lại mỗi tháng: {p.ncf_new:,.0f} đ")
         lines.append(f"  - Quỹ khẩn cấp sau khi mua: {p.efr_after:.1f} tháng ({p.efr_safety})")
         lines.append(f"  - Tổng lãi phải trả: {p.total_interest:,.0f} đ")
         delayed = [gi for gi in p.goal_impacts
@@ -196,7 +202,7 @@ class ExplainService:
         blocked = {"NEGATIVE_CASHFLOW", "REQUIRES_EMERGENCY_FUND"}
         viable = [p for p in result.packets if not any(f in blocked for f in p.flags)]
 
-        payment_rec = _payment_recommendation(best, viable)
+        payment_rec = _payment_recommendation(best, viable, result.metrics.ncf)
         goal_delay = _goal_delay_summary(best)
         efr_assessment = _emergency_fund_assessment(best)
         balance = result.scoring.balance_recommendation
@@ -210,14 +216,19 @@ class ExplainService:
         )
 
 
-def _payment_recommendation(best: OptionPacket, viable: list[OptionPacket]) -> str:
+def _payment_recommendation(best: OptionPacket, viable: list[OptionPacket], current_ncf: int) -> str:
     from app.modules.advisory.domain.options import PlanType
     if not viable:
         return ("Hiện tại chưa có phương án BNPL nào an toàn với ngân sách của bạn. "
                 "Khuyến nghị chờ đến khi dòng tiền ổn định hơn hoặc chọn sản phẩm có giá thấp hơn.")
     if best.option.type == PlanType.PAY_IN_FULL:
-        return ("Trả thẳng 1 lần là tối ưu nhất — không mất thêm lãi và giải phóng dòng tiền "
-                "ngay từ tháng sau.")
+        purchase_month_ncf = current_ncf - best.option.upfront
+        if purchase_month_ncf < 0:
+            return (f"Trả thẳng 1 lần là tối ưu về lãi suất, nhưng tháng mua dòng tiền sẽ là "
+                    f"{purchase_month_ncf:,.0f} đ — cần bù từ quỹ dự phòng khoảng "
+                    f"{abs(purchase_month_ncf):,.0f} đ. Từ tháng sau dòng tiền trở lại bình thường.")
+        return (f"Trả thẳng 1 lần là tối ưu nhất — tháng mua dòng tiền còn {purchase_month_ncf:,.0f} đ, "
+                f"không mất thêm lãi, từ tháng sau hoàn toàn trở lại bình thường.")
     months = best.option.months or 0
     return (f"Trả góp {months} tháng phù hợp nhất với ngân sách của bạn — "
             f"mỗi tháng bỏ ra {best.payment:,.0f} đ, "
@@ -243,7 +254,18 @@ def _goal_delay_summary(best: OptionPacket) -> str:
 
 
 def _emergency_fund_assessment(best: OptionPacket) -> str:
+    from app.modules.advisory.domain.options import PlanType
     efr = best.efr_after
+
+    if best.option.type == PlanType.PAY_IN_FULL:
+        if "REQUIRES_EMERGENCY_FUND" in best.flags:
+            return ("Trả thẳng 1 lần vượt quá tiền mặt sẵn có — bạn sẽ phải rút vào quỹ khẩn cấp "
+                    "để thanh toán. Hãy cân nhắc kỹ vì điều này làm mỏng đệm an toàn của bạn.")
+        return (f"Trả thẳng 1 lần được lấy từ tiền mặt / tiết kiệm sẵn có, sau đó quỹ khẩn cấp "
+                f"còn khoảng {efr:.1f} tháng chi tiêu thiết yếu. "
+                + ("Đây là mức an toàn." if best.efr_safety == "SAFE"
+                   else "Nên theo dõi và bổ sung lại quỹ này."))
+
     if best.efr_safety == "SAFE":
         return (f"Quỹ khẩn cấp vẫn còn {efr:.1f} tháng chi tiêu thiết yếu — "
                 "đây là mức an toàn (ngưỡng tối thiểu là 3 tháng). Bạn vẫn ổn.")

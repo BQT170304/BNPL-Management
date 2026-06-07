@@ -33,6 +33,11 @@ _SYSTEM = (
     "KHÔNG dùng từ viết tắt (DTI, NCF, EFR, delta_pgrs, v.v.). "
     "Dùng: 'tiền còn lại mỗi tháng' thay cho NCF, 'tỷ lệ nợ' thay cho DTI, 'quỹ dự phòng' thay cho EFR. "
     "Nêu con số cụ thể bằng tiền (ví dụ: mỗi tháng trả 2 triệu, sau đó còn lại 3 triệu). "
+    "QUAN TRỌNG về phương án trả 1 lần (pay_in_full): chỉ THÁNG MUA bị trừ toàn bộ số tiền "
+    "Ưu tiên trả ngắn hạn hơn (3 - 6 tháng) nếu khoản trả so với Net Cash Flow (tiền còn lại mỗi tháng) không lớn"
+    "(dùng purchase_month_cashflow), các tháng sau trở lại bình thường (cashflow_after_purchase_month). "
+    "Nếu purchase_month_cashflow âm thì nói rõ 'tháng đó cần dùng quỹ dự phòng'. "
+    "TUYỆT ĐỐI KHÔNG nói 'tiền còn lại không đổi' hoặc 'không ảnh hưởng' cho phương án trả 1 lần. "
     "Trả về JSON đúng schema, không thêm chữ nào khác."
 )
 

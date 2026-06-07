@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import anyio
 from fastapi import APIRouter, Depends
 
 import app.dependencies as deps
@@ -43,7 +44,9 @@ async def evaluate(
         [PlanSpec(PlanType(p.type), p.months, p.apr) for p in body.candidate_plans]
         if body.candidate_plans else default_plans()
     )
-    result = service.evaluate(profile, body.item_name, body.purchase_amount, plans)
+    result = await anyio.to_thread.run_sync(
+        lambda: service.evaluate(profile, body.item_name, body.purchase_amount, plans)
+    )
     by_id = {p.option.id: p for p in result.packets}
     options = [
         OptionScoreOut(
@@ -128,8 +131,12 @@ async def explain(
         [PlanSpec(PlanType(p.type), p.months, p.apr) for p in body.candidate_plans]
         if body.candidate_plans else default_plans()
     )
-    result = service.evaluate(profile, body.item_name, body.purchase_amount, plans)
-    explanation = explain_svc.explain(result)
+    def _run():
+        result = service.evaluate(profile, body.item_name, body.purchase_amount, plans)
+        return explain_svc.explain(result)
+
+    # evaluate + explain may both call an LLM via blocking urllib — offload to a thread
+    explanation = await anyio.to_thread.run_sync(_run)
     return ExplanationOut(
         payment_recommendation=explanation.payment_recommendation,
         goal_delay_summary=explanation.goal_delay_summary,
