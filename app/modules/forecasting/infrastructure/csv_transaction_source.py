@@ -35,9 +35,11 @@ class CsvTransactionSource:
         if self._by_cif is None:
             self._load()
         assert self._by_cif is not None
-        assert self._min is not None and self._max is not None
 
         records = self._by_cif.get(cif)
         if records is None:
             raise CifNotFound(cif)
-        return build_daily_series(records, self._min, self._max)
+        # Use per-CIF date range so trailing zeros don't corrupt the forecast window.
+        cif_min = min(day for day, _ in records)
+        cif_max = max(day for day, _ in records)
+        return build_daily_series(records, cif_min, cif_max)

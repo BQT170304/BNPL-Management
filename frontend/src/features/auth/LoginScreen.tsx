@@ -1,11 +1,7 @@
 import { useState } from "react";
-import { Button } from "../../components/ui/Button";
-import { Card } from "../../components/ui/Card";
-import { ErrorBanner } from "../../components/ui/ErrorBanner";
-import { Field } from "../../components/ui/Field";
-import { TextInput } from "../../components/ui/TextInput";
 import { useAsync } from "../../hooks/useAsync";
 import { useAuth } from "../../state/auth";
+import "./LoginScreen.css";
 
 export function LoginScreen() {
   const { login } = useAuth();
@@ -18,29 +14,49 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
-      <div className="w-full max-w-sm space-y-4">
-        <Card title="BNPL Assistant — Đăng nhập">
-          <div className="space-y-3">
-            {loginCall.error && <ErrorBanner message={loginCall.error} />}
-            <Field label="Tên đăng nhập">
-              <TextInput
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </Field>
-            <Field label="Mật khẩu">
-              <TextInput
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </Field>
-            <Button onClick={submit} disabled={loginCall.loading} className="w-full">
-              {loginCall.loading ? "Đang đăng nhập…" : "Đăng nhập"}
-            </Button>
-          </div>
-        </Card>
+    <div className="login-screen">
+      <div className="login-hero">
+        <div className="login-logo">💳</div>
+        <h1 className="login-title">BNPL Assistant</h1>
+        <p className="login-subtitle">Tư vấn tài chính thông minh</p>
+      </div>
+
+      <div className="login-form">
+        {loginCall.error && (
+          <div className="login-error">{loginCall.error}</div>
+        )}
+
+        <div className="login-field">
+          <label>Tên đăng nhập</label>
+          <input
+            className="login-input"
+            type="text"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            placeholder="username"
+          />
+        </div>
+
+        <div className="login-field">
+          <label>Mật khẩu</label>
+          <input
+            className="login-input"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="password"
+          />
+        </div>
+
+        <button
+          className="login-btn"
+          onClick={submit}
+          disabled={loginCall.loading}
+        >
+          {loginCall.loading ? "Đang đăng nhập..." : "Đăng nhập"}
+        </button>
+
+        <p className="login-demo-hint">Demo: nguyenvana / 123456</p>
       </div>
     </div>
   );

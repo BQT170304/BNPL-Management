@@ -1,0 +1,91 @@
+/* ── Shared: mobile base ─────────────────────────────── */
+.page-loading {
+  display: flex; justify-content: center; align-items: center; height: 200px;
+}
+
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary-light);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.page-header {
+  background: var(--gradient-hero);
+  padding: 16px 20px;
+  color: white;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+}
+.page-header h1 { font-size: var(--text-lg); font-weight: 600; }
+
+.back-btn {
+  background: none; border: none; color: white;
+  font-size: 18px; cursor: pointer; padding: 4px; line-height: 1;
+}
+
+/* NOTE: .page-body base is flex-col; per-page desktop overrides are scoped in each page CSS */
+.page-body {
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 12px;
+  overflow-y: auto;
+}
+
+.section-card {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.section-title {
+  font-size: 11px; font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.primary-btn {
+  width: 100%; height: 48px;
+  background: var(--gradient-primary);
+  color: white; border: none;
+  border-radius: var(--radius-full);
+  font-size: var(--text-base); font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+}
+.primary-btn:active { transform: scale(0.97); }
+.primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.page-error {
+  display: flex; justify-content: center; align-items: center;
+  height: 200px; color: var(--color-text-muted); font-size: var(--text-sm);
+}
+
+/* ── Sub-pages desktop: advisor / results / detail ─── */
+@media (min-width: 768px) {
+  .page-header {
+    padding: 40px 48px;
+    min-height: 120px;
+    align-items: flex-end;
+    padding-bottom: 24px;
+  }
+  .page-header h1 { font-size: 1.75rem; font-weight: 800; }
+
+  /* These page-body rules only take effect on pages that don't
+     override .page-body in their own scoped CSS */
+  .advisor-page .page-body,
+  .results-page .page-body,
+  .detail-page .page-body {
+    padding: 32px 48px;
+    gap: 20px;
+  }
+
+  .section-card { padding: 24px 28px; border-radius: var(--radius-xl); }
+  .section-title { font-size: 12px; margin-bottom: 16px; }
+
+  .primary-btn { max-width: 280px; height: 50px; }
+}

@@ -1,12 +1,10 @@
-# tests/unit/test_bedrock_scorer.py
 import json
 
 from app.modules.advisory.application.dto import OptionPacket, ScoringPacket
 from app.modules.advisory.domain.options import PaymentOption, PlanType
-from app.modules.advisory.domain.scoring import ScoreWeights
 from app.modules.advisory.domain.subscores import SubScores
 from app.modules.explanation.infrastructure.bedrock_scorer import BedrockScorer
-from app.modules.explanation.infrastructure.deterministic_scorer import DeterministicScorer
+from app.modules.explanation.infrastructure.hard_rule_scorer import HardRuleScorer
 
 
 def _packet() -> ScoringPacket:
@@ -40,32 +38,28 @@ class _StubBody:
         return json.dumps(payload).encode()
 
 
-def _fallback() -> DeterministicScorer:
-    return DeterministicScorer(ScoreWeights())
-
-
 def test_bedrock_parses_valid_json():
     valid = json.dumps({
         "options": [{"option_id": "installment_12", "risk_score": 55,
                      "recommended": True, "explanation": "ổn", "key_factors": ["x"]}],
         "best_option_id": "installment_12", "summary": "ok",
     })
-    scorer = BedrockScorer(client=_StubClient(valid), model_id="m", fallback=_fallback())
+    scorer = BedrockScorer(client=_StubClient(valid), model_id="m", fallback=HardRuleScorer())
     result = scorer.score(_packet())
     assert result.scorer_used == "bedrock"
     assert result.options[0].risk_score == 55
 
 
 def test_bedrock_malformed_json_falls_back():
-    scorer = BedrockScorer(client=_StubClient("not json"), model_id="m", fallback=_fallback())
+    scorer = BedrockScorer(client=_StubClient("not json"), model_id="m", fallback=HardRuleScorer())
     result = scorer.score(_packet())
-    assert result.scorer_used == "deterministic"
+    assert result.scorer_used == "hard_rules"
 
 
 def test_bedrock_client_error_falls_back():
     scorer = BedrockScorer(
         client=_StubClient(None, raise_exc=RuntimeError("boom")),
-        model_id="m", fallback=_fallback(),
+        model_id="m", fallback=HardRuleScorer(),
     )
     result = scorer.score(_packet())
-    assert result.scorer_used == "deterministic"
+    assert result.scorer_used == "hard_rules"

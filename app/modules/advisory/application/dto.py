@@ -8,9 +8,18 @@ from app.modules.advisory.domain.subscores import SubScores
 
 
 @dataclass
+class GoalImpact:
+    goal_id: str
+    name: str
+    delay_months: float
+    reachable_by_deadline: bool
+    monthly_shortfall: int
+
+
+@dataclass
 class OptionPacket:
     option: PaymentOption
-    payment: int          # monthly payment used for scoring (0 for pay-in-full)
+    payment: int
     ncf_new: int
     dti_new: float
     efr_after: float
@@ -18,6 +27,9 @@ class OptionPacket:
     delta_pgrs: float
     subscores: SubScores
     flags: list[str] = field(default_factory=list)
+    goal_impacts: list[GoalImpact] = field(default_factory=list)
+    efr_safety: str = "SAFE"
+    total_interest: int = 0
 
 
 @dataclass
@@ -47,4 +59,5 @@ class ScoringResult:
     options: list[OptionScore]
     best_option_id: str
     summary: str
-    scorer_used: str         # "bedrock" | "deterministic"
+    scorer_used: str
+    balance_recommendation: str = ""

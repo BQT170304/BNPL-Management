@@ -18,11 +18,11 @@ from app.modules.explanation.schemas import LLMScoringResponse
 logger = logging.getLogger(__name__)
 
 _SYSTEM = (
-    "Bạn là cố vấn tài chính. Dựa trên các chỉ số ĐÃ TÍNH SẴN cho mỗi phương án "
-    "thanh toán, hãy chấm điểm RỦI RO mỗi phương án trên thang 0-100 "
-    "(0 = an toàn nhất, 100 = rủi ro nhất) và chọn phương án tốt nhất "
-    "(rủi ro thấp nhất, không vi phạm ràng buộc cứng). "
-    "CHỈ trả về JSON đúng schema, không thêm chữ nào khác."
+    "Bạn là cố vấn tài chính cá nhân. Dựa trên các chỉ số ĐÃ TÍNH SẴN cho mỗi phương án "
+    "thanh toán BNPL, hãy: (1) chấm điểm RỦI RO mỗi phương án 0–100 (0=an toàn nhất), "
+    "(2) chọn phương án tốt nhất, (3) viết giải thích 2-3 câu tiếng Việt tự nhiên cho mỗi phương án "
+    "— nêu rõ tác động dòng tiền, lãi, mục tiêu bị ảnh hưởng. "
+    "CHỈ trả về JSON đúng schema, không thêm gì khác."
 )
 
 
@@ -31,33 +31,56 @@ class BedrockClient(Protocol):
 
 
 def _build_prompt(packet: ScoringPacket) -> str:
-    options = [
-        {
-            "option_id": o.option.id, "label": o.option.label,
-            "monthly_payment": o.payment, "ncf_new": o.ncf_new,
-            "dti_new": round(o.dti_new, 2), "efr_after": round(o.efr_after, 2),
+    options = []
+    for o in packet.options:
+        opt: dict = {
+            "option_id": o.option.id,
+            "label": o.option.label,
+            "monthly_payment": o.payment,
+            "total_interest": o.total_interest,
+            "ncf_new": o.ncf_new,
+            "ncf_change": o.ncf_new - packet.current_ncf,
+            "dti_new": round(o.dti_new, 2),
+            "efr_after": round(o.efr_after, 2),
+            "efr_safety": o.efr_safety,
             "delta_pgrs": round(o.delta_pgrs, 2),
-            "subscores": {
-                "cashflow": o.subscores.cashflow, "goal": o.subscores.goal,
-                "efr": o.subscores.efr, "dti": o.subscores.dti,
-            },
             "flags": o.flags,
         }
-        for o in packet.options
-    ]
+        if o.goal_impacts:
+            opt["goal_impacts"] = [
+                {
+                    "goal": gi.name,
+                    "delay_months": round(gi.delay_months, 1),
+                    "reachable_by_deadline": gi.reachable_by_deadline,
+                    "monthly_shortfall": gi.monthly_shortfall,
+                }
+                for gi in o.goal_impacts
+            ]
+        options.append(opt)
+
     payload = {
-        "item": packet.item_name, "amount": packet.purchase_amount,
+        "item": packet.item_name,
+        "amount": packet.purchase_amount,
         "risk_tolerance": packet.risk_tolerance,
-        "current": {
-            "ncf": packet.current_ncf, "dti": round(packet.current_dti, 2),
-            "efr": round(packet.current_efr, 2), "pgrs": round(packet.current_pgrs, 2),
+        "current_profile": {
+            "ncf": packet.current_ncf,
+            "dti": round(packet.current_dti, 2),
+            "efr": round(packet.current_efr, 2),
+            "pgrs": round(packet.current_pgrs, 2),
         },
         "options": options,
         "response_schema": {
-            "options": [{"option_id": "str", "risk_score": "0-100",
-                         "recommended": "bool", "explanation": "str",
-                         "key_factors": ["str"]}],
-            "best_option_id": "str", "summary": "str",
+            "options": [
+                {
+                    "option_id": "str",
+                    "risk_score": "0-100 (0=safest)",
+                    "recommended": "bool",
+                    "explanation": "2-3 câu tiếng Việt: nêu dòng tiền, lãi, ảnh hưởng mục tiêu",
+                    "key_factors": ["str"],
+                }
+            ],
+            "best_option_id": "str",
+            "summary": "1 câu tiếng Việt tổng kết",
         },
     }
     return json.dumps(payload, ensure_ascii=False)

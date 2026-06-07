@@ -68,6 +68,6 @@ async def test_evaluate_purchase(client):
     })
     assert r.status_code == 200
     body = r.json()
-    assert body["scorer_used"] == "deterministic"
+    assert body["scorer_used"] in ("hard_rules", "pd_model", "local_llm", "bedrock")
     assert len(body["options"]) == 4
     assert "best_option_id" in body

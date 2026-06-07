@@ -1,9 +1,6 @@
-# tests/unit/test_subscores.py
 import pytest
 
-from app.modules.advisory.domain.scoring import ScoreWeights, weighted_option_score
 from app.modules.advisory.domain.subscores import (
-    SubScores,
     s_cashflow,
     s_dti,
     s_efr,
@@ -46,9 +43,3 @@ def test_s_dti_bands():
     assert s_dti(30) == 70
     assert s_dti(37) == 40
     assert s_dti(45) == 0
-
-
-def test_weighted_option_score_default_weights():
-    sub = SubScores(cashflow=20, goal=70.0, efr=70, dti=40)
-    # .35*20 + .35*70 + .20*70 + .10*40 = 7 + 24.5 + 14 + 4 = 49.5
-    assert weighted_option_score(sub, ScoreWeights()) == pytest.approx(49.5)

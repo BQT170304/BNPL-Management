@@ -1,100 +1,69 @@
-// frontend/src/App.tsx
-import { useState } from "react";
-import type { CifSeed } from "./api/types";
-import { Button } from "./components/ui/Button";
-import { AnalysisDashboard } from "./features/analysis/AnalysisDashboard";
-import { PurchaseEvaluator } from "./features/advisory/PurchaseEvaluator";
-import { LoginScreen } from "./features/auth/LoginScreen";
-import { CashflowForecast } from "./features/forecast/CashflowForecast";
-import { CifImport } from "./features/ingestion/CifImport";
-import { ProfileBuilder } from "./features/profile/ProfileBuilder";
-import { ActiveProfileProvider, useActiveProfile } from "./state/activeProfile";
-import { AuthProvider, useAuth } from "./state/auth";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { AuthProvider, useAuth } from './state/auth';
+import { ActiveProfileProvider } from './state/activeProfile';
+import { BottomNav } from './components/layout/BottomNav';
+import { LoginScreen } from './features/auth/LoginScreen';
+import { HomeDashboard } from './pages/HomeDashboard';
+import { PurchaseAdvisor } from './pages/PurchaseAdvisor';
+import { ComparisonResults } from './pages/ComparisonResults';
+import { ProfilePage } from './pages/ProfilePage';
+import { getDemoProfileId } from './api/endpoints';
+import './pages/pages.css';
 
-type Section = "import" | "profile" | "analysis" | "evaluate" | "forecast";
+const DEMO_CIF = "10000327";
 
-const USERNAME = "nguyenvana";
+function AppShell() {
+  const { token, logout } = useAuth();
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-const TABS: { key: Section; label: string }[] = [
-  { key: "import", label: "1. Nhập CIF" },
-  { key: "profile", label: "2. Hồ sơ" },
-  { key: "analysis", label: "3. Phân tích" },
-  { key: "evaluate", label: "4. Đánh giá" },
-  { key: "forecast", label: "5. Dự báo" },
-];
+  useEffect(() => {
+    if (token) {
+      getDemoProfileId().then(r => setProfileId(r.id)).catch(console.error);
+    }
+  }, [token]);
 
-function Shell() {
-  const [section, setSection] = useState<Section>("import");
-  const [seed, setSeed] = useState<CifSeed | null>(null);
-  const { activeProfileId } = useActiveProfile();
-  const { logout } = useAuth();
-
-  return (
-    <div className="mx-auto max-w-4xl p-6">
-      <div className="mb-5 flex items-start justify-between">
-        <div>
-          <h1 className="mb-1 text-2xl font-bold text-slate-800">BNPL Assistant</h1>
-          <p className="text-sm text-slate-500">Tư vấn tài chính cá nhân</p>
-        </div>
-        <div className="flex items-center gap-3 text-sm text-slate-600">
-          <span>{USERNAME}</span>
-          <Button variant="ghost" onClick={logout}>Đăng xuất</Button>
-        </div>
-      </div>
-
-      <nav className="mb-6 flex flex-wrap gap-2">
-        {TABS.map((t) => (
-          <Button key={t.key}
-            variant={section === t.key ? "primary" : "ghost"}
-            onClick={() => setSection(t.key)}>
-            {t.label}
-          </Button>
-        ))}
-      </nav>
-
-      {section === "import" && (
-        <CifImport onSeed={(s) => { setSeed(s); setSection("profile"); }} />
-      )}
-      {section === "profile" && (
-        <ProfileBuilder initialSeed={seed} onCreated={() => setSection("analysis")} />
-      )}
-      {section === "analysis" && (
-        activeProfileId
-          ? <AnalysisDashboard profileId={activeProfileId} />
-          : <NoProfile />
-      )}
-      {section === "evaluate" && (
-        activeProfileId
-          ? <PurchaseEvaluator profileId={activeProfileId} />
-          : <NoProfile />
-      )}
-      {section === "forecast" && <CashflowForecast />}
-    </div>
-  );
-}
-
-function Gate() {
-  const { token } = useAuth();
   if (!token) return <LoginScreen />;
-  return (
-    <ActiveProfileProvider>
-      <Shell />
-    </ActiveProfileProvider>
-  );
-}
 
-function NoProfile() {
+  if (!profileId) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  const handleProfileUpdated = () => setRefreshKey(k => k + 1);
+
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-      Chưa có hồ sơ. Hãy tạo hồ sơ ở bước 2 trước.
-    </div>
+    <BrowserRouter>
+      <div className="app-content" style={{ paddingBottom: 'var(--nav-height)' }}>
+        <Routes>
+          <Route path="/" element={
+            <HomeDashboard key={refreshKey} profileId={profileId} cif={DEMO_CIF} />
+          } />
+          <Route path="/advisor" element={
+            <PurchaseAdvisor profileId={profileId} cif={DEMO_CIF} />
+          } />
+          <Route path="/results" element={<ComparisonResults />} />
+          <Route path="/profile" element={
+            <ProfilePage profileId={profileId} onLogout={logout} onProfileUpdated={handleProfileUpdated} />
+          } />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+      <BottomNav />
+    </BrowserRouter>
   );
 }
 
 export function App() {
   return (
     <AuthProvider>
-      <Gate />
+      <ActiveProfileProvider>
+        <AppShell />
+      </ActiveProfileProvider>
     </AuthProvider>
   );
 }

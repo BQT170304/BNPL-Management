@@ -1,0 +1,60 @@
+.detail-page { display: flex; flex-direction: column; }
+
+.detail-table { display: flex; flex-direction: column; }
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-row span { color: var(--color-text-secondary); }
+.detail-row strong { color: var(--color-text-primary); font-weight: 600; }
+
+.impact-row { margin-bottom: 14px; }
+.impact-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.impact-label { font-size: var(--text-sm); font-weight: 500; }
+.impact-value { font-size: var(--text-sm); font-weight: 600; }
+.impact-bar { height: 8px; background: var(--color-border); border-radius: 4px; }
+.impact-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+
+.ai-explanation {
+  background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  border-left: 4px solid var(--color-primary-light);
+}
+.ai-badge { font-size: var(--text-sm); font-weight: 700; color: var(--color-primary-container); margin-bottom: 8px; }
+.ai-text { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.6; }
+
+.flags-card {
+  background: #FEF9C3;
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+.flag-item { font-size: var(--text-sm); color: #92400E; padding: 4px 0; }
+
+.detail-two-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Desktop ─────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .detail-two-col {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .detail-row { padding: 12px 0; font-size: var(--text-base); }
+  .impact-label, .impact-value { font-size: var(--text-base); }
+  .impact-bar { height: 10px; border-radius: 5px; }
+  .impact-fill { border-radius: 5px; }
+  .ai-explanation { border-radius: var(--radius-xl); padding: 20px 24px; }
+  .ai-badge { font-size: var(--text-base); margin-bottom: 10px; }
+  .ai-text { font-size: var(--text-base); line-height: 1.7; }
+}

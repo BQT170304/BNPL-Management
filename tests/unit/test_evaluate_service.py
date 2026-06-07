@@ -1,13 +1,11 @@
-# tests/unit/test_evaluate_service.py
 from datetime import date
 
 from app.core.clock import FixedClock
 from app.modules.advisory.application.services import EvaluatePurchaseService
 from app.modules.advisory.domain.options import default_plans
-from app.modules.advisory.domain.scoring import ScoreWeights
 from app.modules.analysis.application.services import AnalysisService
 from app.modules.analysis.domain.allocation import EvenAllocation
-from app.modules.explanation.infrastructure.deterministic_scorer import DeterministicScorer
+from app.modules.explanation.infrastructure.hard_rule_scorer import HardRuleScorer
 from app.modules.goals.domain.entities import Goal, Priority
 from app.modules.profiles.domain.entities import Debt, Expense, FinancialProfile, Income
 from app.modules.profiles.domain.value_objects import DebtType, ExpenseClass, RiskTolerance
@@ -36,9 +34,7 @@ def _profile() -> FinancialProfile:
 
 def _service() -> EvaluatePurchaseService:
     analysis = AnalysisService(FixedClock(date(2025, 6, 1)), EvenAllocation())
-    return EvaluatePurchaseService(
-        analysis=analysis, scorer=DeterministicScorer(ScoreWeights()),
-    )
+    return EvaluatePurchaseService(analysis=analysis, scorer=HardRuleScorer())
 
 
 def test_evaluate_returns_one_score_per_option():
@@ -51,13 +47,16 @@ def test_evaluate_returns_one_score_per_option():
 
 def test_evaluate_flags_negative_cashflow_options():
     result = _service().evaluate(_profile(), "Phone", 15_000_000, default_plans())
-    # 15,000,000 / 3 = 5,000,000 monthly > NCF 1,200,000 -> negative cashflow
     inst3 = next(p for p in result.packets if p.option.id == "installment_3")
     assert "NEGATIVE_CASHFLOW" in inst3.flags
 
 
 def test_evaluate_pay_in_full_requires_emergency_fund_flag_when_cash_short():
-    # purchase 150,000,000 > cash; pay-in-full should flag emergency-fund risk
     result = _service().evaluate(_profile(), "Car", 150_000_000, default_plans())
     full = next(p for p in result.packets if p.option.id == "full")
     assert "REQUIRES_EMERGENCY_FUND" in full.flags
+
+
+def test_hard_rule_scorer_used():
+    result = _service().evaluate(_profile(), "Phone", 15_000_000, default_plans())
+    assert result.scoring.scorer_used == "hard_rules"

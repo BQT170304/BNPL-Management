@@ -9,7 +9,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    persistence: Literal["memory", "postgres"] = "memory"
+    persistence: Literal["memory", "sqlite", "postgres"] = "sqlite"
+    sqlite_path: str = "bnpl.db"
     database_url: str = "postgresql+asyncpg://bnpl:bnpl@localhost:5432/bnpl"
     database_url_test: str = "postgresql+asyncpg://bnpl:bnpl@localhost:5432/bnpl_test"
 
@@ -20,27 +21,32 @@ class Settings(BaseSettings):
     allocation_strategy: Literal["weighted", "even"] = "weighted"
     efr_safe_months: int = 3
 
-    ingestion_csv_path: str = "summary_by_cif_month.csv"
+    ingestion_csv_path: str = "data/summary_by_cif_month.csv"
     cors_origins: str = "http://localhost:5173"
 
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
-    score_weight_cashflow: float = 0.35
-    score_weight_goal: float = 0.35
-    score_weight_efr: float = 0.20
-    score_weight_dti: float = 0.10
-
     auth_enabled: bool = True
     auth_username: str = "nguyenvana"
     auth_password: str = "123456"
     auth_token: str = "demo-token-bnpl"        # bearer returned on login
-    transactions_csv_path: str = "transactions_labeled.csv"
+    transactions_csv_path: str = "data/transactions_labeled.csv"
     forecast_horizon_days: int = 90
     forecast_min_active_days: int = 20
     prophet_enabled: bool = True
     demo_cif: str = "10000327"
+
+    # ── Local hosted LLM (OpenAI-compatible) ────────────────────────────────
+    local_llm_enabled: bool = False
+    local_llm_url: str = "http://203.113.152.4:7777/llm/v1/chat/completions"
+    local_llm_auth: str = "Basic dmlldHRlbF9haTpWYWlAMjAyNQ=="
+    local_llm_model: str = "Qwen3-14B"
+
+    # ── ML PD (Probability of Default) model — trained on Taiwan Credit Card Default data ──
+    ml_model_path: str = "models/pd_model.pkl"
+    ml_enabled: bool = True   # auto-detected: only active when model file exists
 
 
 @lru_cache
