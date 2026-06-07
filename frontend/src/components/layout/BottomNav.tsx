@@ -43,7 +43,7 @@ export function BottomNav() {
             <line x1="2" y1="10" x2="22" y2="10"/>
           </svg>
         </span>
-        <span className="nav-brand-name">BNPL</span>
+        <span className="nav-brand-name">BudgetMate</span>
       </div>
       {tabs.map(tab => (
         <NavLink

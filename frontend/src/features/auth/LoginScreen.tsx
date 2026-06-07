@@ -17,7 +17,7 @@ export function LoginScreen() {
     <div className="login-screen">
       <div className="login-hero">
         <div className="login-logo">💳</div>
-        <h1 className="login-title">BNPL Assistant</h1>
+        <h1 className="login-title">BudgetMate</h1>
         <p className="login-subtitle">Tư vấn tài chính thông minh</p>
       </div>
 
@@ -56,7 +56,6 @@ export function LoginScreen() {
           {loginCall.loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
 
-        <p className="login-demo-hint">Demo: nguyenvana / 123456</p>
       </div>
     </div>
   );
