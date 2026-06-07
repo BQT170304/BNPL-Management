@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -153,19 +153,21 @@ def create_app() -> FastAPI:
     )
 
     protected = [Depends(require_auth)]
-    app.include_router(auth_router)
-    app.include_router(profiles_router, dependencies=protected)
-    app.include_router(advisory_router, dependencies=protected)
-    app.include_router(analysis_router, dependencies=protected)
-    app.include_router(consent_router, dependencies=protected)
-    app.include_router(ingestion_router, dependencies=protected)
-    app.include_router(obligations_router, dependencies=protected)
-    app.include_router(forecasting_router, dependencies=protected)
-    app.include_router(planning_router, dependencies=protected)
-    app.include_router(decisions_router, dependencies=protected)
-    app.include_router(feedback_router, dependencies=protected)
-    app.include_router(copilot_router, dependencies=protected)
-    app.include_router(portfolio_router, dependencies=protected)
+    api = APIRouter(prefix="/api")
+    api.include_router(auth_router)
+    api.include_router(profiles_router, dependencies=protected)
+    api.include_router(advisory_router, dependencies=protected)
+    api.include_router(analysis_router, dependencies=protected)
+    api.include_router(consent_router, dependencies=protected)
+    api.include_router(ingestion_router, dependencies=protected)
+    api.include_router(obligations_router, dependencies=protected)
+    api.include_router(forecasting_router, dependencies=protected)
+    api.include_router(planning_router, dependencies=protected)
+    api.include_router(decisions_router, dependencies=protected)
+    api.include_router(feedback_router, dependencies=protected)
+    api.include_router(copilot_router, dependencies=protected)
+    api.include_router(portfolio_router, dependencies=protected)
+    app.include_router(api)
 
     @app.exception_handler(ProfileNotFound)
     @app.exception_handler(GoalNotFound)
@@ -198,10 +200,11 @@ def create_app() -> FastAPI:
         return JSONResponse(status_code=400, content={"detail": str(exc)})
 
     @app.get("/health")
+    @api.get("/health")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.get("/demo-profile-id")
+    @api.get("/demo-profile-id")
     async def demo_profile_id() -> dict[str, str]:
         return {"id": DEMO_PROFILE_ID}
 
