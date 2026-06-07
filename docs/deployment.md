@@ -1,6 +1,6 @@
 # Deployment Guide
 
-**Last updated:** 2026-06-07
+**Last updated:** 2026-06-07 (rev 2)
 
 ---
 
@@ -9,7 +9,7 @@
 | Service | URL |
 |---------|-----|
 | Frontend (HTTPS) | https://d2ttyqgmp7bw35.cloudfront.net |
-| Backend health | http://bohu-alb-325198050.us-east-1.elb.amazonaws.com/health |
+| Backend health | https://d2ttyqgmp7bw35.cloudfront.net/api/health |
 | API base | https://d2ttyqgmp7bw35.cloudfront.net/api |
 
 ---
@@ -79,11 +79,19 @@ aws ssm put-parameter \
   --type SecureString \
   --overwrite
 
-# Update LLM auth token
+# Update local LLM auth token
 aws ssm put-parameter \
   --region us-east-1 \
   --name /bnpl/prod/LOCAL_LLM_AUTH \
   --value "Bearer <token>" \
+  --type SecureString \
+  --overwrite
+
+# Update OpenRouter API key
+aws ssm put-parameter \
+  --region us-east-1 \
+  --name /bnpl/prod/OPENROUTER_API_KEY \
+  --value "sk-or-v1-..." \
   --type SecureString \
   --overwrite
 ```

@@ -1,6 +1,6 @@
 # BNPL Assistant — Architecture
 
-**Last updated:** 2026-06-07
+**Last updated:** 2026-06-07 (rev 2)
 **Status:** Production (AWS ECS + S3 + CloudFront)
 
 ---
@@ -33,7 +33,13 @@ CloudFront (d2ttyqgmp7bw35.cloudfront.net)
                     ┌──────────┴──────────┐
                     ▼                     ▼
               RDS PostgreSQL        SSM Parameter Store
-              (bohu, us-east-1)     DATABASE_URL / LOCAL_LLM_AUTH
+              (bohu, us-east-1)     DATABASE_URL
+                                    LOCAL_LLM_AUTH
+                                    OPENROUTER_API_KEY
+                               │
+                               ▼ (outbound HTTPS)
+                         OpenRouter API
+                         (qwen/qwen3-14b)
 ```
 
 ### VPC Topology
@@ -70,7 +76,7 @@ FastAPI (app/)
     goals/             savings goals
     analysis/          NCF / DTI / EFR / PGRS calculations
     advisory/          payment option scoring + simulation
-    explanation/       deterministic scorer, optional Bedrock/LLM scorer
+    explanation/       deterministic scorer, OpenRouter scorer, local LLM scorer
     ml/                PD model scorer (sklearn, lazy-loaded)
     ingestion/         CIF CSV reader → profile seed
     forecasting/       naive forecaster (Prophet optional)
@@ -78,7 +84,7 @@ FastAPI (app/)
     decisions/         decision log + outcome recording
     feedback/          portfolio metrics + dataset export
     planning/          recommend + simulate endpoints
-    copilot/           LLM chat (Qwen3-14B via local endpoint)
+    copilot/           LLM chat (OpenRouter qwen/qwen3-14b)
     auth/              bearer token auth
     portfolio/         portfolio summary
 alembic/               DB migrations
@@ -125,17 +131,33 @@ frontend/
 
 | Variable | Where | Notes |
 |----------|-------|-------|
-| `DATABASE_URL` | SSM SecureString `/bnpl/prod/DATABASE_URL` | `postgresql+asyncpg://...` |
-| `LOCAL_LLM_AUTH` | SSM SecureString `/bnpl/prod/LOCAL_LLM_AUTH` | Bearer token for LLM |
+| `DATABASE_URL` | SSM `/bnpl/prod/DATABASE_URL` | `postgresql+asyncpg://...` |
+| `LOCAL_LLM_AUTH` | SSM `/bnpl/prod/LOCAL_LLM_AUTH` | Bearer token for local LLM |
+| `OPENROUTER_API_KEY` | SSM `/bnpl/prod/OPENROUTER_API_KEY` | `sk-or-v1-...` |
 | `PERSISTENCE` | ECS env | `postgres` |
 | `AUTH_ENABLED` | ECS env | `true` |
 | `AUTH_USERNAME` / `AUTH_PASSWORD` | ECS env | Login credentials |
-| `AUTH_TOKEN` | ECS env | Static bearer token |
+| `AUTH_TOKEN` | ECS env | Static bearer token returned on login |
+| `OPENROUTER_ENABLED` | ECS env | `true` |
+| `OPENROUTER_MODEL` | ECS env | `qwen/qwen3-14b` |
+| `LOCAL_LLM_ENABLED` | ECS env | `true` (takes priority over OpenRouter) |
 | `LOCAL_LLM_URL` | ECS env | `http://203.113.152.4:7777/...` |
 | `LOCAL_LLM_MODEL` | ECS env | `Qwen3-14B` |
+| `BEDROCK_ENABLED` | ECS env | `false` (no IAM permission) |
 | `FORECAST_ENGINE` | ECS env | `deterministic` |
 | `ML_ENABLED` | ECS env | `true` (auto-disables if no model file) |
 | `TRANSACTIONS_CSV_PATH` | ECS env | `data/transactions_labeled.csv` |
+
+### LLM Scorer Priority Chain
+
+```
+LocalLLM (if LOCAL_LLM_ENABLED)
+  → OpenRouter (if OPENROUTER_ENABLED + key present)
+    → PD Model (if model file exists)
+      → HardRules (always available, no LLM)
+```
+
+Each layer falls back to the next on timeout or error.
 
 ---
 
@@ -154,7 +176,7 @@ Job 1: deploy-backend
   6. Create ECS service if missing / update if exists
   7. Wait for service stability
 
-Job 2: deploy-frontend (needs: deploy-backend)
+Job 2: deploy-frontend (needs: deploy-backend OR skipped)
   1. Checkout
   2. OIDC → assume role GitHubActions-BNPL-Deploy
   3. s3 sync frontend/public/ → s3://bohu-frontend/
@@ -162,6 +184,11 @@ Job 2: deploy-frontend (needs: deploy-backend)
 ```
 
 **IAM:** GitHub OIDC provider + `GitHubActions-BNPL-Deploy` role — no static AWS keys stored.
+
+**Path-based triggers** — each job only runs when relevant files change:
+- Backend: `app/**`, `alembic/**`, `Dockerfile`, `requirements*.txt`, `data/**`, `ecs-task-definition.json`
+- Frontend: `frontend/**`
+- `.github/**` changes alone trigger neither job
 
 ---
 
@@ -176,6 +203,6 @@ Job 2: deploy-frontend (needs: deploy-backend)
 | ECS Service | `bnpl-backend-service` | desired 1, revision tracked by CI |
 | ECR | `bnpl-backend` | mutable tags |
 | RDS | `bohu` | PostgreSQL, private subnet |
-| SSM | `/bnpl/prod/DATABASE_URL` `/bnpl/prod/LOCAL_LLM_AUTH` | SecureString |
+| SSM | `/bnpl/prod/DATABASE_URL` `/bnpl/prod/LOCAL_LLM_AUTH` `/bnpl/prod/OPENROUTER_API_KEY` | SecureString |
 | IAM Role (ECS) | `ecsTaskExecutionRole` | ECR pull + SSM secrets + CloudWatch logs |
 | IAM Role (CI) | `GitHubActions-BNPL-Deploy` | OIDC, scoped to repo/dev branch |

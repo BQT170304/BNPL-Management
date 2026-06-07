@@ -1,7 +1,9 @@
 # API Reference
 
-**Base URL (production):** `https://d2ttyqgmp7bw35.cloudfront.net/api`
-**Auth:** `Authorization: Bearer <token>` (token = `demo-token-bnpl` in current deployment)
+**Base URL (production):** `https://d2ttyqgmp7bw35.cloudfront.net/api`  
+**Auth:** `Authorization: Bearer <token>` — obtain via `POST /api/auth/login`, or use static token `demo-token-bnpl`
+
+> All routes are prefixed with `/api`. CloudFront routes `/api/*` → ALB → ECS.
 
 ---
 
