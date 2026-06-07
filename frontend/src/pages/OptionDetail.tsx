@@ -17,7 +17,8 @@ const FLAG_VI: Record<string, string> = {
 };
 
 const OPTION_NAMES: Record<string, string> = {
-  'pay_in_full': 'Trả thẳng',
+  'full': 'Thanh toán 1 lần',
+  'pay_in_full': 'Thanh toán 1 lần',
   'installment_6': 'Trả góp 6 tháng',
   'installment_12': 'Trả góp 12 tháng',
   'installment_4': 'Trả góp 4 tháng',

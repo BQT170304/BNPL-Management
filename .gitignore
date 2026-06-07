@@ -8,6 +8,12 @@ __pycache__/
 .ruff_cache/
 .codegraph/
 tests/
+.claude
+.claude-plugin
+_templates
+.raw
+.obsidian
+wiki/
 
 # Large input-data artifacts (kept out of version control)
 *.xlsx

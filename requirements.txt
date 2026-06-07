@@ -11,6 +11,7 @@ aiosqlite>=0.19
 alembic>=1.13
 pandas>=2.2
 matplotlib>=3.8
+python-multipart>=0.0.5
 
 # Optional: Prophet cash-flow forecasting (heavy Stan toolchain).
 # Without it the app falls back to the built-in naive forecaster.

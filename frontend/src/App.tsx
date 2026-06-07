@@ -11,7 +11,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { getDemoProfileId } from './api/endpoints';
 import './pages/pages.css';
 
-const DEMO_CIF = "10000327";
+const DEMO_CIF = "10001234";
 
 function AppShell() {
   const { token, logout } = useAuth();

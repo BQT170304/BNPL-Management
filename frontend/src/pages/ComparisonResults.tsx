@@ -14,8 +14,9 @@ const fmt = (n: number) => n >= 1_000_000
   : `${n.toLocaleString('vi-VN')} ₫`;
 
 const PLAN_NAMES: Record<string, string> = {
-  'pay_in_full':   'Trả thẳng',
-  'PAY_IN_FULL':   'Trả thẳng',
+  'full':          'Thanh toán 1 lần',
+  'pay_in_full':   'Thanh toán 1 lần',
+  'PAY_IN_FULL':   'Thanh toán 1 lần',
   'installment_1': 'BNPL 1 tháng',
   'installment_3': 'BNPL 3 tháng',
   'installment_6': 'BNPL 6 tháng',

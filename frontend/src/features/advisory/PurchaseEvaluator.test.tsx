@@ -52,7 +52,7 @@ describe("PurchaseEvaluator", () => {
       expect(screen.getByText(/Phương án trả góp 12 tháng/)).toBeInTheDocument()
     );
     expect(screen.getAllByText("Trả góp 12 tháng").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Trả thẳng").length).toBeGreaterThan(0);
-    expect(screen.getByText(/NEGATIVE_CASHFLOW/)).toBeInTheDocument();
+    expect(screen.getAllByText("Thanh toán 1 lần").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Dòng tiền âm/)).toBeInTheDocument();
   });
 });

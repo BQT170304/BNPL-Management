@@ -51,3 +51,8 @@ class ForecastService:
         png = self._renderer.render(result)
         self._charts[cif] = png
         return png
+
+    def invalidate(self, cif: str) -> None:
+        """Drop cached forecast + chart for a CIF (after its data changes)."""
+        self._results.pop(cif, None)
+        self._charts.pop(cif, None)

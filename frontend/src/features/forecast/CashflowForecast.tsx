@@ -7,7 +7,7 @@ import { Spinner } from "../../components/ui/Spinner";
 import { useAsync } from "../../hooks/useAsync";
 import { formatVnd } from "../../lib/money";
 
-const CIF = "10000327";
+const CIF = "10001234";
 
 export function CashflowForecast() {
   const summary = useAsync(getForecast);
@@ -49,7 +49,7 @@ export function CashflowForecast() {
         </div>
       )}
 
-      <Card title="Biểu đồ dự báo dòng tiền (CIF 10000327)">
+      <Card title="Biểu đồ dự báo dòng tiền (CIF 10001234)">
         {objectUrl ? (
           <img alt="Biểu đồ dự báo dòng tiền" src={objectUrl} />
         ) : (

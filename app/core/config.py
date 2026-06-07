@@ -32,11 +32,11 @@ class Settings(BaseSettings):
     auth_username: str = "nguyenvana"
     auth_password: str = "123456"
     auth_token: str = "demo-token-bnpl"        # bearer returned on login
-    transactions_csv_path: str = "data/transactions_labeled.csv"
+    transactions_csv_path: str = "data/demo_transactions_10001234.csv"
     forecast_horizon_days: int = 90
     forecast_min_active_days: int = 20
     prophet_enabled: bool = True
-    demo_cif: str = "10000327"
+    demo_cif: str = "10001234"
 
     # ── Local hosted LLM (OpenAI-compatible) ────────────────────────────────
     local_llm_enabled: bool = False

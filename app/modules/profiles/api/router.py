@@ -133,6 +133,15 @@ async def extract_profile_from_file(
     filename = file.filename or "upload.csv"
     ext, txns = extract_from_bytes(raw, filename)
 
+    # Feed the uploaded transactions into the forecasting source so the
+    # cash-flow forecast reflects this file instead of a missing seed CSV.
+    if ext.cif and txns:
+        from app.dependencies import get_forecast_service, get_transaction_source
+
+        records = [(t.tran_date.date(), t.amount) for t in txns]
+        get_transaction_source().ingest(ext.cif, records)
+        get_forecast_service().invalidate(ext.cif)
+
     suggested = _extracted_to_profile_in(ext)
 
     total_income = ext.salary + ext.secondary + ext.avg_bonus_monthly + ext.passive

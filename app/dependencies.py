@@ -121,14 +121,23 @@ def get_auth_service() -> AuthService:
     return _auth_service
 
 
+_transaction_source: CsvTransactionSource | None = None
 _forecast_service: ForecastService | None = None
+
+
+def get_transaction_source() -> CsvTransactionSource:
+    global _transaction_source
+    if _transaction_source is None:
+        s = get_settings()
+        _transaction_source = CsvTransactionSource(s.transactions_csv_path)
+    return _transaction_source
 
 
 def get_forecast_service() -> ForecastService:
     global _forecast_service
     if _forecast_service is None:
         s = get_settings()
-        source = CsvTransactionSource(s.transactions_csv_path)
+        source = get_transaction_source()
         renderer = MatplotlibChart()
         forecaster: Forecaster = NaiveForecaster()
         if s.prophet_enabled:

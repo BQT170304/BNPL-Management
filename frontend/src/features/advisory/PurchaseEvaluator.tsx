@@ -27,7 +27,7 @@ function translateFlag(f: string) {
 }
 
 function optionLabel(id: string): string {
-  if (/full/.test(id)) return "Trả thẳng";
+  if (/full/.test(id)) return "Thanh toán 1 lần";
   const m = id.match(/(\d+)/);
   return m ? `Trả góp ${m[1]} tháng` : id;
 }
